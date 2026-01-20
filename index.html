@@ -309,4 +309,267 @@
     roundRect(x+dx, y+dy, size, size, size*0.12, true, true);
 
     // pips
-    const margin = si
+    const margin = size * 0.22;
+    const cx = [x+dx+margin, x+dx+size/2, x+dx+size-margin];
+    const cy = [y+dy+margin, y+dy+size/2, y+dy+size-margin];
+    const r = Math.max(2, size*0.06);
+
+    const pips = {
+      1: [[1,1]],
+      2: [[0,0],[2,2]],
+      3: [[0,0],[1,1],[2,2]],
+      4: [[0,0],[2,0],[0,2],[2,2]],
+      5: [[0,0],[2,0],[1,1],[0,2],[2,2]],
+      6: [[0,0],[2,0],[0,1],[2,1],[0,2],[2,2]],
+    }[value] || [];
+
+    ctx.fillStyle = "black";
+    for (const [ix,iy] of pips) {
+      ctx.beginPath();
+      ctx.arc(cx[ix], cy[iy], r, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function layoutDice() {
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    const n = diceN;
+
+    // välj grid nära kvadrat
+    let cols = Math.ceil(Math.sqrt(n));
+    let rows = Math.ceil(n / cols);
+
+    const base = Math.min(w, h);
+    const gap = Math.max(16, base * 0.03);
+    const margin = Math.max(12, base * 0.05);
+
+    const size = Math.floor(Math.min(
+      (w - 2*margin - (cols-1)*gap)/cols,
+      (h - 2*margin - (rows-1)*gap)/rows
+    ));
+    const dieSize = clamp(size, 60, 700);
+
+    // block size and centering
+    const blockW = cols*dieSize + (cols-1)*gap;
+    const blockH = rows*dieSize + (rows-1)*gap;
+    const baseX = (w - blockW)/2;
+    const baseY = (h - blockH)/2;
+
+    return { w, h, cols, rows, gap, margin, dieSize, baseX, baseY };
+  }
+
+  // ---------- Clock ----------
+  function startClockView() {
+    vizTitle.textContent = "Klocka";
+    actionBtn.textContent = "Slumpa ny tid";
+
+    clockTime = randomTime(interval);
+    setClockAnglesInstant(clockTime);
+    setFacit(formatTime(clockTime));
+    redraw();
+
+    actionBtn.onclick = () => newClockTimeAnimated();
+  }
+
+  function randomTime(interval) {
+    const h = randInt(0, 11);
+    const steps = Math.floor(60 / interval);
+    const m = randInt(0, steps-1) * interval;
+    return { h, m };
+  }
+
+  function formatTime(t) {
+    let hh = t.h % 12;
+    if (hh === 0) hh = 12;
+    return String(hh).padStart(2,"0") + ":" + String(t.m).padStart(2,"0");
+  }
+
+  function setClockAnglesInstant(t) {
+    const minAng = clampAngle(-Math.PI/2 + (t.m/60)*Math.PI*2);
+    const hourAng = clampAngle(-Math.PI/2 + ((t.h%12)/12)*Math.PI*2 + (t.m/60)*(Math.PI*2/12));
+    clockAngles.min = minAng;
+    clockAngles.hour = hourAng;
+  }
+
+  function clampAngle(a) {
+    const two = Math.PI*2;
+    a = a % two;
+    if (a < 0) a += two;
+    return a;
+  }
+
+  function clockwiseDelta(start, target) {
+    start = clampAngle(start);
+    target = clampAngle(target);
+    return (target - start + Math.PI*2) % (Math.PI*2);
+  }
+
+  function newClockTimeAnimated() {
+    stopAllAnimations();
+
+    // ljud max 2 sek
+    playAudio(clockAudio);
+    if (clockStopTimer) clearTimeout(clockStopTimer);
+    clockStopTimer = setTimeout(() => stopAudio(clockAudio), 2000);
+
+    const newT = randomTime(interval);
+
+    const targetMin = clampAngle(-Math.PI/2 + (newT.m/60)*Math.PI*2);
+    const targetHour = clampAngle(-Math.PI/2 + ((newT.h%12)/12)*Math.PI*2 + (newT.m/60)*(Math.PI*2/12));
+
+    const startMin = clockAngles.min;
+    const startHour = clockAngles.hour;
+
+    const dMin = clockwiseDelta(startMin, targetMin);
+    const dHour = clockwiseDelta(startHour, targetHour);
+
+    const duration = 2000;
+    const start = performance.now();
+
+    function frame(t) {
+      const p = clamp((t - start)/duration, 0, 1);
+      const ease = 1 - (1 - p)*(1 - p);
+
+      clockAngles.min = clampAngle(startMin + dMin*ease);
+      clockAngles.hour = clampAngle(startHour + dHour*ease);
+
+      redraw();
+
+      if (p < 1) clockAnim = requestAnimationFrame(frame);
+      else {
+        clockAnim = null;
+        clockTime = newT;
+        setFacit(formatTime(clockTime));
+      }
+    }
+    clockAnim = requestAnimationFrame(frame);
+  }
+
+  function drawClock() {
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    const size = Math.min(w, h);
+
+    const cx = w/2, cy = h/2;
+    const r = size * 0.42;
+
+    // face
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+
+    // markers + numbers (12 up)
+    for (let i=0; i<12; i++) {
+      const ang = -Math.PI/2 + i*(Math.PI*2/12);
+      const x1 = cx + (r*0.88)*Math.cos(ang);
+      const y1 = cy + (r*0.88)*Math.sin(ang);
+      const x2 = cx + (r*0.98)*Math.cos(ang);
+      const y2 = cy + (r*0.98)*Math.sin(ang);
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+      ctx.stroke();
+
+      const num = ((i + 11) % 12) + 1;
+      const tx = cx + (r*0.72)*Math.cos(ang);
+      const ty = cy + (r*0.72)*Math.sin(ang);
+      ctx.fillStyle = "#111";
+      ctx.font = `${Math.max(12, r*0.10)}px system-ui`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(num), tx, ty);
+    }
+
+    // hour hand
+    ctx.strokeStyle = "#111";
+    ctx.lineCap = "round";
+    ctx.lineWidth = Math.max(4, r/18);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + (r*0.55)*Math.cos(clockAngles.hour),
+               cy + (r*0.55)*Math.sin(clockAngles.hour));
+    ctx.stroke();
+
+    // minute hand
+    ctx.lineWidth = Math.max(3, r/24);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + (r*0.80)*Math.cos(clockAngles.min),
+               cy + (r*0.80)*Math.sin(clockAngles.min));
+    ctx.stroke();
+
+    // center dot
+    ctx.fillStyle = "#111";
+    ctx.beginPath();
+    ctx.arc(cx, cy, 6, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // ---------- Rendering ----------
+  function redraw(opts = {}) {
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    ctx.clearRect(0,0,w,h);
+
+    if (mode === "dice") {
+      const L = layoutDice();
+      const n = diceN;
+      const cols = L.cols;
+      const rows = Math.ceil(n/cols);
+
+      // block centering
+      const fullRows = Math.floor(n / cols);
+      const lastCount = n % cols;
+
+      const jitterScale = (opts.diceJitter ?? 0);
+
+      for (let i=0; i<n; i++) {
+        const row = Math.floor(i/cols);
+        const col = i % cols;
+
+        let rowBaseX = L.baseX;
+        if (lastCount !== 0 && row === fullRows) {
+          const lastW = lastCount * L.dieSize + (lastCount - 1) * L.gap;
+          rowBaseX = (L.w - lastW)/2;
+        }
+
+        const x = rowBaseX + col*(L.dieSize + L.gap);
+        const y = L.baseY + row*(L.dieSize + L.gap);
+        drawDie(x, y, L.dieSize, diceValues[i] ?? 1, jitterScale);
+      }
+    } else {
+      drawClock();
+    }
+  }
+
+  function stopAllAnimations() {
+    if (diceAnim) cancelAnimationFrame(diceAnim);
+    if (clockAnim) cancelAnimationFrame(clockAnim);
+    diceAnim = null;
+    clockAnim = null;
+  }
+
+  function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+
+  function roundRect(x, y, w, h, r, fill, stroke) {
+    r = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+  }
+
+})();
+</script>
+</body>
+</html>
