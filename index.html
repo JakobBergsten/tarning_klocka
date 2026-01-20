@@ -1,318 +1,335 @@
 <!doctype html>
 <html lang="sv">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Tärning eller Klocka</title>
-<style>
-:root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
-body { margin: 0; background: #f6f6f7; color: #111; }
-.app { max-width: 1100px; margin: 0 auto; padding: 16px; }
-.card { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 8px 30px rgba(0,0,0,.06); }
-h1 { font-size: 20px; margin: 0 0 12px; }
-.row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
-.col { display: flex; flex-direction: column; gap: 8px; }
-label { font-size: 14px; }
-input[type="number"], select {
-font-size: 14px; padding: 8px 10px; border: 1px solid #ddd; border-radius: 10px; background: #fff;
-}
-button {
-font-size: 14px; padding: 10px 14px; border: 0; border-radius: 12px; background: #111; color: #fff;
-cursor: pointer;
-}
-button.secondary { background: #e9e9ea; color: #111; }
-button:disabled { opacity: .6; cursor: not-allowed; }
-.hint { color: #666; font-size: 13px; margin-top: 8px; }
-.spacer { height: 10px; }
-.hidden { display: none !important; }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Tärning eller Klocka</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background: #f6f6f7; color: #111; }
+    .app { max-width: 1100px; margin: 0 auto; padding: 16px; }
+    .card { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 8px 30px rgba(0,0,0,.06); }
+    h1 { font-size: 20px; margin: 0 0 12px; }
+    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .col { display: flex; flex-direction: column; gap: 8px; }
+    label { font-size: 14px; }
+    input[type="number"], select {
+      font-size: 14px; padding: 8px 10px; border: 1px solid #ddd; border-radius: 10px; background: #fff;
+    }
+    button {
+      font-size: 14px; padding: 10px 14px; border: 0; border-radius: 12px; background: #111; color: #fff;
+      cursor: pointer;
+    }
+    button.secondary { background: #e9e9ea; color: #111; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .hint { color: #666; font-size: 13px; margin-top: 8px; }
+    .spacer { height: 10px; }
+    .hidden { display: none !important; }
 
-/* Visualization */
-.vizWrap {
-margin-top: 14px;
-display: grid;
-grid-template-rows: auto 1fr auto;
-gap: 10px;
-height: min(78vh, 760px);
-}
-.vizTop { display:flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
-.vizInfo { font-size: 15px; font-weight: 600; }
-.vizCanvasWrap {
-background: #fff; border-radius: 14px; box-shadow: inset 0 0 0 1px #eee;
-overflow: hidden; display:flex;
-}
-canvas { width: 100%; height: 100%; display:block; background: white; }
-.vizBottom { display:flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; }
-.pill { padding: 8px 12px; background:#f0f0f1; border-radius: 999px; font-size: 13px; color:#222; }
-</style>
+    /* Visualization */
+    .vizWrap {
+      margin-top: 14px;
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 10px;
+      height: min(78vh, 760px);
+    }
+    .vizTop { display:flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    .vizInfo { font-size: 15px; font-weight: 600; }
+    .vizCanvasWrap {
+      background: #fff; border-radius: 14px; box-shadow: inset 0 0 0 1px #eee;
+      overflow: hidden; display:flex;
+    }
+    canvas { width: 100%; height: 100%; display:block; background: white; }
+    .vizBottom { display:flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; }
+    .pill { padding: 8px 12px; background:#f0f0f1; border-radius: 999px; font-size: 13px; color:#222; }
+  </style>
 </head>
 <body>
-<div class="app">
-<div class="card" id="setupCard">
-<h1>Tärning eller Klocka</h1>
+  <div class="app">
+    <div class="card" id="setupCard">
+      <h1>Tärning eller Klocka</h1>
 
-<div class="row">
-<div class="col">
-<label><input type="radio" name="mode" value="dice" checked> Slå tärning</label>
-<label><input type="radio" name="mode" value="clock"> Visa klocka (slumpad tid)</label>
-</div>
+      <div class="row">
+        <div class="col">
+          <label><input type="radio" name="mode" value="dice" checked> Slå tärning</label>
+          <label><input type="radio" name="mode" value="clock"> Visa klocka (slumpad tid)</label>
+        </div>
 
-<div class="col" style="margin-left:auto;">
-<label><input id="showAnswer" type="checkbox" checked> Visa facit (summa / klockslag)</label>
-<div class="hint">Ljud spelas när du trycker på knappar (webbläsare kräver användarklick).</div>
-</div>
-</div>
+        <div class="col" style="margin-left:auto;">
+          <!-- DEFAULT: AVBOCKAD -->
+          <label><input id="showAnswer" type="checkbox"> Visa facit (summa / klockslag)</label>
+          <div class="hint">Ljud spelas när du trycker på knappar (webbläsare kräver användarklick).</div>
+        </div>
+      </div>
 
-<div class="spacer"></div>
+      <div class="spacer"></div>
 
-<div class="row" id="diceOptions">
-<label>Antal tärningar:</label>
-<input id="numDice" type="number" min="1" max="24" value="2" />
-</div>
+      <div class="row" id="diceOptions">
+        <label>Antal tärningar:</label>
+        <input id="numDice" type="number" min="1" max="24" value="2" />
+      </div>
 
-<div class="row hidden" id="clockOptions">
-<label>Minutintervall:</label>
-<select id="interval">
-<option>1</option>
-<option selected>5</option>
-<option>10</option>
-<option>15</option>
-<option>20</option>
-<option>30</option>
-<option>60</option>
-</select>
-</div>
+      <div class="row hidden" id="clockOptions">
+        <label>Minutintervall:</label>
+        <select id="interval">
+          <option>1</option>
+          <option selected>5</option>
+          <option>10</option>
+          <option>15</option>
+          <option>20</option>
+          <option>30</option>
+          <option>60</option>
+        </select>
+      </div>
 
-<div class="spacer"></div>
-<div class="row">
-<button id="openBtn">Öppna</button>
-</div>
+      <div class="spacer"></div>
+      <div class="row">
+        <button id="openBtn">Öppna</button>
+      </div>
 
-<div class="hint">Tips: På mobilen kan du rotera skärmen. Du kan också använda helskärmsknappen i visualiseringen.</div>
-</div>
+      <div class="hint">Tips: På mobilen kan du rotera skärmen. Du kan också använda helskärmsknappen i visualiseringen.</div>
+    </div>
 
-<div class="card hidden" id="vizCard">
-<div class="vizWrap">
-<div class="vizTop">
-<div class="vizInfo" id="vizTitle">—</div>
-<div class="row">
-<span class="pill" id="answerPill">Facit: —</span>
-<button class="secondary" id="fullscreenBtn">Helskärm</button>
-<button class="secondary" id="backBtn">Tillbaka</button>
-</div>
-</div>
+    <div class="card hidden" id="vizCard">
+      <div class="vizWrap">
+        <div class="vizTop">
+          <div class="vizInfo" id="vizTitle">—</div>
+          <div class="row">
+            <span class="pill" id="answerPill">Facit: (dolt)</span>
+            <button class="secondary" id="fullscreenBtn">Helskärm</button>
+            <button class="secondary" id="backBtn">Tillbaka</button>
+          </div>
+        </div>
 
-<div class="vizCanvasWrap" id="canvasContainer">
-<canvas id="canvas"></canvas>
-</div>
+        <div class="vizCanvasWrap" id="canvasContainer">
+          <canvas id="canvas"></canvas>
+        </div>
 
-<div class="vizBottom">
-<button id="actionBtn">—</button>
-</div>
-</div>
-</div>
-</div>
+        <div class="vizBottom">
+          <button id="actionBtn">—</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
-<!-- Ljud (lägg dina filer i sounds/) -->
-<audio id="diceAudio" preload="auto">
-<source src="sounds/dice.wav" type="audio/wav">
-</audio>
-<audio id="clockAudio" preload="auto">
-<source src="sounds/clock.wav" type="audio/wav">
-</audio>
+  <!-- Ljud (lägg dina filer i sounds/) -->
+  <audio id="diceAudio" preload="auto">
+    <source src="sounds/dice.wav" type="audio/wav">
+  </audio>
+  <audio id="clockAudio" preload="auto">
+    <source src="sounds/clock.wav" type="audio/wav">
+  </audio>
 
 <script>
 (() => {
-// ---------- State ----------
-let mode = "dice";
-let showAnswer = true;
+  // ---------- State ----------
+  let mode = "dice";
+  let showAnswer = document.getElementById("showAnswer").checked;
 
-// Dice state
-let diceN = 2;
-let diceValues = [];
-let diceAnim = null;
+  // Dice state
+  let diceN = 2;
+  let diceValues = [];
+  let diceAnim = null;
 
-// Clock state
-let interval = 5;
-let clockTime = { h: 0, m: 0 }; // 0-11, 0-59
-let clockAngles = { hour: -Math.PI/2, min: -Math.PI/2 };
-let clockAnim = null;
+  // Clock state
+  let interval = 5;
+  let clockTime = { h: 0, m: 0 }; // 0-11, 0-59
+  let clockAngles = { hour: -Math.PI/2, min: -Math.PI/2 };
+  let clockAnim = null;
 
-// ---------- Elements ----------
-const setupCard = document.getElementById("setupCard");
-const vizCard = document.getElementById("vizCard");
-const diceOptions = document.getElementById("diceOptions");
-const clockOptions = document.getElementById("clockOptions");
+  // ---------- Elements ----------
+  const setupCard = document.getElementById("setupCard");
+  const vizCard = document.getElementById("vizCard");
+  const diceOptions = document.getElementById("diceOptions");
+  const clockOptions = document.getElementById("clockOptions");
 
-const openBtn = document.getElementById("openBtn");
-const backBtn = document.getElementById("backBtn");
-const fullscreenBtn = document.getElementById("fullscreenBtn");
-const actionBtn = document.getElementById("actionBtn");
+  const openBtn = document.getElementById("openBtn");
+  const backBtn = document.getElementById("backBtn");
+  const fullscreenBtn = document.getElementById("fullscreenBtn");
+  const actionBtn = document.getElementById("actionBtn");
 
-const showAnswerEl = document.getElementById("showAnswer");
-const numDiceEl = document.getElementById("numDice");
-const intervalEl = document.getElementById("interval");
+  const showAnswerEl = document.getElementById("showAnswer");
+  const numDiceEl = document.getElementById("numDice");
+  const intervalEl = document.getElementById("interval");
 
-const vizTitle = document.getElementById("vizTitle");
-const answerPill = document.getElementById("answerPill");
+  const vizTitle = document.getElementById("vizTitle");
+  const answerPill = document.getElementById("answerPill");
 
-const canvasContainer = document.getElementById("canvasContainer");
-const canvas = document.getElementById("canvas");
-const ctx = canvas.getContext("2d");
+  const canvasContainer = document.getElementById("canvasContainer");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
 
-const diceAudio = document.getElementById("diceAudio");
-const clockAudio = document.getElementById("clockAudio");
-let clockStopTimer = null;
+  const diceAudio = document.getElementById("diceAudio");
+  const clockAudio = document.getElementById("clockAudio");
+  let clockStopTimer = null;
 
-// ---------- Helpers ----------
-function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+  // ---------- Helpers ----------
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
 
-function resizeCanvasToContainer() {
-const rect = canvasContainer.getBoundingClientRect();
-const dpr = window.devicePixelRatio || 1;
-canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-canvas.height = Math.max(1, Math.floor(rect.height * dpr));
-ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
-}
+  function resizeCanvasToContainer() {
+    const rect = canvasContainer.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+    canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
+  }
 
-function playAudio(audioEl) {
-try {
-audioEl.pause();
-audioEl.currentTime = 0;
-audioEl.play().catch(()=>{ /* ignore autoplay issues */ });
-} catch {}
-}
+  function playAudio(audioEl) {
+    try {
+      audioEl.pause();
+      audioEl.currentTime = 0;
+      audioEl.play().catch(()=>{});
+    } catch {}
+  }
 
-function stopAudio(audioEl) {
-try { audioEl.pause(); audioEl.currentTime = 0; } catch {}
-}
+  function stopAudio(audioEl) {
+    try { audioEl.pause(); audioEl.currentTime = 0; } catch {}
+  }
 
-function setFacit(text) {
-if (!showAnswer) {
-answerPill.textContent = "Facit: (dolt)";
-return;
-}
-answerPill.textContent = "Facit: " + text;
-}
+  function setFacit(text) {
+    if (!showAnswer) {
+      answerPill.textContent = "Facit: (dolt)";
+      return;
+    }
+    answerPill.textContent = "Facit: " + text;
+  }
 
-// ---------- UI wiring ----------
-document.querySelectorAll('input[name="mode"]').forEach(r => {
-r.addEventListener("change", () => {
-mode = document.querySelector('input[name="mode"]:checked').value;
-diceOptions.classList.toggle("hidden", mode !== "dice");
-clockOptions.classList.toggle("hidden", mode !== "clock");
-});
-});
+  // ---------- UI wiring ----------
+  document.querySelectorAll('input[name="mode"]').forEach(r => {
+    r.addEventListener("change", () => {
+      mode = document.querySelector('input[name="mode"]:checked').value;
+      diceOptions.classList.toggle("hidden", mode !== "dice");
+      clockOptions.classList.toggle("hidden", mode !== "clock");
+    });
+  });
 
-showAnswerEl.addEventListener("change", () => {
-showAnswer = !!showAnswerEl.checked;
-});
+  showAnswerEl.addEventListener("change", () => {
+    showAnswer = !!showAnswerEl.checked;
+    // uppdatera pill direkt
+    if (!vizCard.classList.contains("hidden")) {
+      if (mode === "dice") setFacit(String(diceValues.reduce((a,b)=>a+b,0)));
+      else setFacit(formatTime(clockTime));
+    } else {
+      setFacit("—");
+    }
+  });
 
-numDiceEl.addEventListener("change", () => {
-diceN = clamp(parseInt(numDiceEl.value || "2", 10), 1, 24);
-numDiceEl.value = diceN;
-});
+  numDiceEl.addEventListener("change", () => {
+    diceN = clamp(parseInt(numDiceEl.value || "2", 10), 1, 24);
+    numDiceEl.value = diceN;
+  });
 
-intervalEl.addEventListener("change", () => {
-interval = parseInt(intervalEl.value, 10);
-});
+  intervalEl.addEventListener("change", () => {
+    interval = parseInt(intervalEl.value, 10);
+  });
 
-openBtn.addEventListener("click", () => {
-showAnswer = !!showAnswerEl.checked;
-diceN = clamp(parseInt(numDiceEl.value || "2", 10), 1, 24);
-interval = parseInt(intervalEl.value, 10);
+  openBtn.addEventListener("click", () => {
+    showAnswer = !!showAnswerEl.checked;
+    diceN = clamp(parseInt(numDiceEl.value || "2", 10), 1, 24);
+    interval = parseInt(intervalEl.value, 10);
 
-setupCard.classList.add("hidden");
-vizCard.classList.remove("hidden");
+    setupCard.classList.add("hidden");
+    vizCard.classList.remove("hidden");
 
-resizeCanvasToContainer();
-if (mode === "dice") startDiceView();
-else startClockView();
-});
+    resizeCanvasToContainer();
+    if (mode === "dice") startDiceView();
+    else startClockView();
+  });
 
-backBtn.addEventListener("click", () => {
-stopAllAnimations();
-setupCard.classList.remove("hidden");
-vizCard.classList.add("hidden");
-});
+  // FIX: lämna fullscreen innan vi går tillbaka (annars kan UI "låsa")
+  backBtn.addEventListener("click", async () => {
+    stopAllAnimations();
 
-fullscreenBtn.addEventListener("click", async () => {
-try {
-if (!document.fullscreenElement) {
-await vizCard.requestFullscreen();
-} else {
-await document.exitFullscreen();
-}
-} catch {}
-});
+    if (document.fullscreenElement) {
+      try { await document.exitFullscreen(); } catch {}
+    }
 
-window.addEventListener("resize", () => {
-if (!vizCard.classList.contains("hidden")) {
-resizeCanvasToContainer();
-redraw();
-}
-});
+    setupCard.classList.remove("hidden");
+    vizCard.classList.add("hidden");
+  });
 
-// ---------- Dice ----------
-function startDiceView() {
-vizTitle.textContent = "Tärningar";
-actionBtn.textContent = "Slå igen";
-diceValues = Array.from({length: diceN}, () => randInt(1,6));
-setFacit(String(diceValues.reduce((a,b)=>a+b,0)));
-redraw();
+  fullscreenBtn.addEventListener("click", async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await vizCard.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch {}
+  });
 
-actionBtn.onclick = () => rollDiceAnimated();
-}
+  window.addEventListener("resize", () => {
+    if (!vizCard.classList.contains("hidden")) {
+      resizeCanvasToContainer();
+      redraw();
+    }
+  });
 
-function rollDiceAnimated() {
-stopAllAnimations();
-playAudio(diceAudio);
+  // ---------- Dice ----------
+  function startDiceView() {
+    vizTitle.textContent = "Tärningar";
+    actionBtn.textContent = "Slå igen";
+    diceValues = Array.from({length: diceN}, () => randInt(1,6));
+    setFacit(String(diceValues.reduce((a,b)=>a+b,0)));
+    redraw();
 
-const duration = 900; // ms
-const start = performance.now();
-const final = Array.from({length: diceN}, () => randInt(1,6));
+    actionBtn.onclick = () => rollDiceAnimated();
+  }
 
-function frame(t) {
-const p = clamp((t - start)/duration, 0, 1);
-const ease = 1 - (1 - p)*(1 - p);
+  function rollDiceAnimated() {
+    stopAllAnimations();
+    playAudio(diceAudio);
 
-// under animation: slumpa snabbt + jitter som minskar
-if (p < 1) {
-diceValues = Array.from({length: diceN}, () => randInt(1,6));
-} else {
-diceValues = final;
-}
+    const duration = 950; // ms
+    const start = performance.now();
+    const final = Array.from({length: diceN}, () => randInt(1,6));
 
-redraw({ diceJitter: (1 - ease) });
+    function frame(t) {
+      const p = clamp((t - start)/duration, 0, 1);
+      const ease = 1 - (1 - p)*(1 - p);
 
-if (p < 1) diceAnim = requestAnimationFrame(frame);
-else {
-diceAnim = null;
-setFacit(String(diceValues.reduce((a,b)=>a+b,0)));
-}
-}
-diceAnim = requestAnimationFrame(frame);
-}
+      if (p < 1) diceValues = Array.from({length: diceN}, () => randInt(1,6));
+      else diceValues = final;
 
-function drawDie(x, y, size, value, jitterScale) {
-const j = (size * 0.08) * jitterScale;
-const dx = (Math.random()*2 - 1) * j;
-const dy = (Math.random()*2 - 1) * j;
+      // jitter + bounce
+      const jitter = (1 - ease);
+      const bounce = Math.abs(Math.sin(p * Math.PI * 3)) * (1 - ease);
 
-// shadow
-ctx.fillStyle = "rgba(0,0,0,0.07)";
-roundRect(x+6+dx, y+6+dy, size, size, size*0.12, true, false);
+      redraw({ diceJitter: jitter, diceBounce: bounce });
 
-// body
-ctx.fillStyle = "white";
-ctx.strokeStyle = "black";
-ctx.lineWidth = Math.max(2, size/40);
-roundRect(x+dx, y+dy, size, size, size*0.12, true, true);
+      if (p < 1) diceAnim = requestAnimationFrame(frame);
+      else {
+        diceAnim = null;
+        setFacit(String(diceValues.reduce((a,b)=>a+b,0)));
+        redraw(); // final crisp redraw
+      }
+    }
+    diceAnim = requestAnimationFrame(frame);
+  }
 
-// pips
-    const margin = si
+  function drawDie(x, y, size, value, jitterScale, bounceScale) {
+    const j = (size * 0.08) * (jitterScale || 0);
+    const dx = (Math.random()*2 - 1) * j;
+    const dy = (Math.random()*2 - 1) * j;
+
+    const b = (size * 0.14) * (bounceScale || 0); // studs uppåt
+    const dy2 = dy - b;
+
+    // shadow
+    ctx.fillStyle = "rgba(0,0,0,0.07)";
+    roundRect(x+6+dx, y+6+dy2, size, size, size*0.12, true, false);
+
+    // body
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = Math.max(2, size/40);
+    roundRect(x+dx, y+dy2, size, size, size*0.12, true, true);
+
+    // pips
     const margin = size * 0.22;
     const cx = [x+dx+margin, x+dx+size/2, x+dx+size-margin];
-    const cy = [y+dy+margin, y+dy+size/2, y+dy+size-margin];
+    const cy = [y+dy2+margin, y+dy2+size/2, y+dy2+size-margin];
     const r = Math.max(2, size*0.06);
 
     const pips = {
@@ -342,7 +359,9 @@ roundRect(x+dx, y+dy, size, size, size*0.12, true, true);
     let rows = Math.ceil(n / cols);
 
     const base = Math.min(w, h);
-    const gap = Math.max(16, base * 0.03);
+
+    // ÖKAD SPACING
+    const gap = Math.max(24, base * 0.04);
     const margin = Math.max(12, base * 0.05);
 
     const size = Math.floor(Math.min(
@@ -409,7 +428,6 @@ roundRect(x+dx, y+dy, size, size, size*0.12, true, true);
   function newClockTimeAnimated() {
     stopAllAnimations();
 
-    // ljud max 2 sek
     playAudio(clockAudio);
     if (clockStopTimer) clearTimeout(clockStopTimer);
     clockStopTimer = setTimeout(() => stopAudio(clockAudio), 2000);
@@ -521,13 +539,12 @@ roundRect(x+dx, y+dy, size, size, size*0.12, true, true);
       const L = layoutDice();
       const n = diceN;
       const cols = L.cols;
-      const rows = Math.ceil(n/cols);
 
-      // block centering
       const fullRows = Math.floor(n / cols);
       const lastCount = n % cols;
 
       const jitterScale = (opts.diceJitter ?? 0);
+      const bounceScale = (opts.diceBounce ?? 0);
 
       for (let i=0; i<n; i++) {
         const row = Math.floor(i/cols);
@@ -541,7 +558,7 @@ roundRect(x+dx, y+dy, size, size, size*0.12, true, true);
 
         const x = rowBaseX + col*(L.dieSize + L.gap);
         const y = L.baseY + row*(L.dieSize + L.gap);
-        drawDie(x, y, L.dieSize, diceValues[i] ?? 1, jitterScale);
+        drawDie(x, y, L.dieSize, diceValues[i] ?? 1, jitterScale, bounceScale);
       }
     } else {
       drawClock();
