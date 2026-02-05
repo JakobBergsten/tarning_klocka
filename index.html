@@ -88,7 +88,7 @@
         <label>Talrad från:</label>
         <input id="nlMin" type="number" value="0" style="width:90px" />
         <label>till:</label>
-        <input id="nlMax" type="number" value="20" style="width:90px" />
+        <input id="nlMax" type="number" value="10" style="width:90px" />
         <span class="hint" style="margin:0">Tips: t.ex. -10 till 10</span>
       </div>
 
@@ -117,8 +117,10 @@
         </div>
 
         <div class="vizBottom">
-          <button id="actionBtn">—</button>
-        </div>
+        <button id="actionBtn">—</button>
+        <button class="secondary" id="leftBtn">←</button>
+        <button class="secondary" id="rightBtn">→</button>
+      </div>
       </div>
     </div>
   </div>
@@ -151,7 +153,7 @@
   // Number line state
   let nlDisplayValue = 0;
   let nlMin = 0;
-  let nlMax = 20;
+  let nlMax = 10;
   let nlValue = 0;
   let nlAnim = null;
   let nlAnimState = null; // {from,to,t0,duration}
@@ -167,6 +169,9 @@
   const backBtn = document.getElementById("backBtn");
   const fullscreenBtn = document.getElementById("fullscreenBtn");
   const actionBtn = document.getElementById("actionBtn");
+  const leftBtn = document.getElementById("leftBtn");
+  const rightBtn = document.getElementById("rightBtn");
+
 
   const showAnswerEl = document.getElementById("showAnswer");
   const numDiceEl = document.getElementById("numDice");
@@ -327,9 +332,35 @@
     if (e.key === "ArrowRight") { e.preventDefault(); moveNumberLine(+1); }
   });
 
+  // Swipe för talrad (mobil/surfplatta)
+  let touchStartX = null;
+
+  canvas.addEventListener("touchstart", (e) => {
+    if (vizCard.classList.contains("hidden")) return;
+    if (mode !== "numberline") return;
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+
+  canvas.addEventListener("touchend", (e) => {
+    if (vizCard.classList.contains("hidden")) return;
+    if (mode !== "numberline") return;
+    if (touchStartX == null) return;
+
+    const endX = e.changedTouches[0].clientX;
+    const dx = endX - touchStartX;
+    touchStartX = null;
+
+    if (Math.abs(dx) < 25) return; // ignore små svep
+
+    if (dx < 0) moveNumberLine(-1);
+    else moveNumberLine(+1);
+  }, { passive: true });
+
 
   // ---------- Dice ----------
   function startDiceView() {
+    leftBtn.classList.add("hidden");
+    rightBtn.classList.add("hidden");
     vizTitle.textContent = "Tärningar";
     actionBtn.textContent = "Slå igen";
     diceValues = Array.from({length: diceN}, () => randInt(1,6));
@@ -443,6 +474,8 @@
 
   // ---------- Clock ----------
   function startClockView() {
+    leftBtn.classList.add("hidden");
+    rightBtn.classList.add("hidden");
     vizTitle.textContent = "Klocka";
     actionBtn.textContent = "Slumpa ny tid";
 
@@ -597,18 +630,26 @@
   actionBtn.textContent = "Slumpa punkt";
 
   nlValue = randInt(nlMin, nlMax);
+  nlDisplayValue = nlValue;              // ✅ VIKTIGT
   setFacit(String(nlValue));
   redraw();
+
+  leftBtn.classList.remove("hidden");
+  rightBtn.classList.remove("hidden");
+
+  leftBtn.onclick = () => moveNumberLine(-1);
+  rightBtn.onclick = () => moveNumberLine(+1);
 
   actionBtn.onclick = () => {
     stopAllAnimations();
     stopNumberlineAnim();
     nlValue = randInt(nlMin, nlMax);
-    nlDisplayValue = nlValue;
+    nlDisplayValue = nlValue;            // ✅ bra (du hade den)
     setFacit(String(nlValue));
     redraw();
   };
 }
+
 
 function stopNumberlineAnim() {
   if (nlAnim) cancelAnimationFrame(nlAnim);
