@@ -54,6 +54,7 @@
         <div class="col">
           <label><input type="radio" name="mode" value="dice" checked> Slå tärning</label>
           <label><input type="radio" name="mode" value="clock"> Visa klocka (slumpad tid)</label>
+          <label><input type="radio" name="mode" value="numberline"> Visa talrad</label>
         </div>
 
         <div class="col" style="margin-left:auto;">
@@ -82,6 +83,15 @@
           <option>60</option>
         </select>
       </div>
+
+      <div class="row hidden" id="numberlineOptions">
+        <label>Talrad från:</label>
+        <input id="nlMin" type="number" value="0" style="width:90px" />
+        <label>till:</label>
+        <input id="nlMax" type="number" value="20" style="width:90px" />
+        <span class="hint" style="margin:0">Tips: t.ex. -10 till 10</span>
+      </div>
+
 
       <div class="spacer"></div>
       <div class="row">
@@ -138,11 +148,20 @@
   let clockAngles = { hour: -Math.PI/2, min: -Math.PI/2 };
   let clockAnim = null;
 
+  // Number line state
+  let nlDisplayValue = 0;
+  let nlMin = 0;
+  let nlMax = 20;
+  let nlValue = 0;
+  let nlAnim = null;
+  let nlAnimState = null; // {from,to,t0,duration}
+
   // ---------- Elements ----------
   const setupCard = document.getElementById("setupCard");
   const vizCard = document.getElementById("vizCard");
   const diceOptions = document.getElementById("diceOptions");
   const clockOptions = document.getElementById("clockOptions");
+  const numberlineOptions = document.getElementById("numberlineOptions");
 
   const openBtn = document.getElementById("openBtn");
   const backBtn = document.getElementById("backBtn");
@@ -152,6 +171,8 @@
   const showAnswerEl = document.getElementById("showAnswer");
   const numDiceEl = document.getElementById("numDice");
   const intervalEl = document.getElementById("interval");
+  const nlMinEl = document.getElementById("nlMin");
+  const nlMaxEl = document.getElementById("nlMax");
 
   const vizTitle = document.getElementById("vizTitle");
   const answerPill = document.getElementById("answerPill");
@@ -201,19 +222,22 @@
       mode = document.querySelector('input[name="mode"]:checked').value;
       diceOptions.classList.toggle("hidden", mode !== "dice");
       clockOptions.classList.toggle("hidden", mode !== "clock");
+      numberlineOptions.classList.toggle("hidden", mode !== "numberline");
     });
   });
 
   showAnswerEl.addEventListener("change", () => {
     showAnswer = !!showAnswerEl.checked;
-    // uppdatera pill direkt
+
     if (!vizCard.classList.contains("hidden")) {
       if (mode === "dice") setFacit(String(diceValues.reduce((a,b)=>a+b,0)));
-      else setFacit(formatTime(clockTime));
+      else if (mode === "clock") setFacit(formatTime(clockTime));
+      else setFacit(String(nlValue));
     } else {
       setFacit("—");
     }
   });
+
 
   numDiceEl.addEventListener("change", () => {
     diceN = clamp(parseInt(numDiceEl.value || "2", 10), 1, 24);
@@ -228,18 +252,47 @@
     showAnswer = !!showAnswerEl.checked;
     diceN = clamp(parseInt(numDiceEl.value || "2", 10), 1, 24);
     interval = parseInt(intervalEl.value, 10);
+    if (mode === "numberline") {
+      let a = parseInt(nlMinEl.value || "0", 10);
+      let b = parseInt(nlMaxEl.value || "20", 10);
+
+      if (Number.isNaN(a)) a = 0;
+      if (Number.isNaN(b)) b = 20;
+
+      // om användaren skriver "fel" ordning
+      if (a > b) [a, b] = [b, a];
+
+      // begränsa så det inte blir extremt (valfritt, men bra)
+      a = clamp(a, -200, 200);
+      b = clamp(b, -200, 200);
+
+      // minst 1 steg
+      if (a === b) b = a + 1;
+
+      nlMin = a;
+      nlMax = b;
+
+      // skriv tillbaka (så UI visar vad som faktiskt gäller)
+      nlMinEl.value = String(nlMin);
+      nlMaxEl.value = String(nlMax);
+    }
+
+
 
     setupCard.classList.add("hidden");
     vizCard.classList.remove("hidden");
 
     resizeCanvasToContainer();
     if (mode === "dice") startDiceView();
-    else startClockView();
+    else if (mode === "clock") startClockView();
+    else startNumberLineView();
+
   });
 
   // FIX: lämna fullscreen innan vi går tillbaka (annars kan UI "låsa")
   backBtn.addEventListener("click", async () => {
     stopAllAnimations();
+    stopNumberlineAnim();
 
     if (document.fullscreenElement) {
       try { await document.exitFullscreen(); } catch {}
@@ -265,6 +318,15 @@
       redraw();
     }
   });
+
+  window.addEventListener("keydown", (e) => {
+    if (vizCard.classList.contains("hidden")) return;
+    if (mode !== "numberline") return;
+
+    if (e.key === "ArrowLeft") { e.preventDefault(); moveNumberLine(-1); }
+    if (e.key === "ArrowRight") { e.preventDefault(); moveNumberLine(+1); }
+  });
+
 
   // ---------- Dice ----------
   function startDiceView() {
@@ -505,21 +567,22 @@
     }
 
     // hour hand
-    ctx.strokeStyle = "#111";
+    ctx.strokeStyle = "#e53935";
     ctx.lineCap = "round";
     ctx.lineWidth = Math.max(4, r/18);
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + (r*0.55)*Math.cos(clockAngles.hour),
-               cy + (r*0.55)*Math.sin(clockAngles.hour));
+    ctx.lineTo(cx + (r*0.42)*Math.cos(clockAngles.hour),
+               cy + (r*0.42)*Math.sin(clockAngles.hour));
     ctx.stroke();
 
     // minute hand
+    ctx.strokeStyle = "#1e88e5"
     ctx.lineWidth = Math.max(3, r/24);
     ctx.beginPath();
     ctx.moveTo(cx, cy);
-    ctx.lineTo(cx + (r*0.80)*Math.cos(clockAngles.min),
-               cy + (r*0.80)*Math.sin(clockAngles.min));
+    ctx.lineTo(cx + (r*0.62)*Math.cos(clockAngles.min),
+               cy + (r*0.62)*Math.sin(clockAngles.min));
     ctx.stroke();
 
     // center dot
@@ -528,6 +591,163 @@
     ctx.arc(cx, cy, 6, 0, Math.PI*2);
     ctx.fill();
   }
+
+  function startNumberLineView() {
+  vizTitle.textContent = "Talrad";
+  actionBtn.textContent = "Slumpa punkt";
+
+  nlValue = randInt(nlMin, nlMax);
+  setFacit(String(nlValue));
+  redraw();
+
+  actionBtn.onclick = () => {
+    stopAllAnimations();
+    stopNumberlineAnim();
+    nlValue = randInt(nlMin, nlMax);
+    nlDisplayValue = nlValue;
+    setFacit(String(nlValue));
+    redraw();
+  };
+}
+
+function stopNumberlineAnim() {
+  if (nlAnim) cancelAnimationFrame(nlAnim);
+  nlAnim = null;
+  nlAnimState = null;
+}
+
+function moveNumberLine(step) {
+  // Om animation pågår: utgå från nuvarande "display"-värde
+  const base = (nlAnimState ? nlDisplayValue : nlValue);
+
+  // vi vill flytta exakt ett helt steg i heltal
+  const nextInt = clamp(Math.round(base) + step, nlMin, nlMax);
+
+  if (nlAnimState && nextInt === nlAnimState.to) return;
+  if (!nlAnimState && nextInt === nlValue) return;
+
+  animateNumberLineTo(nextInt);
+}
+
+
+function animateNumberLineTo(targetValue) {
+  // Om animation pågår: börja från den position som visas JUST NU
+  let fromValue = nlValue;
+
+  if (nlAnimState) {
+    // beräkna var vi är i den gamla animationen
+    const now = performance.now();
+    const p = clamp((now - nlAnimState.t0) / nlAnimState.duration, 0, 1);
+    const cur = nlAnimState.from + (nlAnimState.to - nlAnimState.from) * p;
+    fromValue = cur;
+  }
+
+  stopAllAnimations();
+  stopNumberlineAnim();
+
+  nlAnimState = {
+    from: fromValue,
+    to: targetValue,
+    t0: performance.now(),
+    duration: 220
+  };
+
+  function frame(t) {
+    const p = clamp((t - nlAnimState.t0) / nlAnimState.duration, 0, 1);
+
+    // smooth
+    const ease = 1 - (1 - p) * (1 - p);
+
+    // uppdatera display value kontinuerligt
+    nlDisplayValue = nlAnimState.from + (nlAnimState.to - nlAnimState.from) * ease;
+
+    redraw({ nlMoveP: ease, nlFrom: nlAnimState.from, nlTo: nlAnimState.to });
+
+    if (p < 1) nlAnim = requestAnimationFrame(frame);
+    else {
+      nlValue = targetValue;
+      nlDisplayValue = nlValue;
+      setFacit(String(nlValue));
+      nlAnim = null;
+      nlAnimState = null;
+      redraw();
+    }
+  }
+  nlAnim = requestAnimationFrame(frame);
+}
+
+
+function numberToX(v, left, right) {
+  const t = (v - nlMin) / (nlMax - nlMin);
+  return left + t * (right - left);
+}
+
+function drawNumberLine(opts = {}) {
+  const w = canvas.width / (window.devicePixelRatio || 1);
+  const h = canvas.height / (window.devicePixelRatio || 1);
+
+  const padX = Math.max(18, w * 0.08);
+  const y = h * 0.55;
+  const left = padX;
+  const right = w - padX;
+
+  // line
+  ctx.strokeStyle = "#111";
+  ctx.lineWidth = Math.max(2, Math.min(4, w / 300));
+  ctx.beginPath();
+  ctx.moveTo(left, y);
+  ctx.lineTo(right, y);
+  ctx.stroke();
+
+  // ticks
+  const tickH = Math.max(10, h * 0.035);
+  ctx.lineWidth = Math.max(2, Math.min(3, w / 400));
+  ctx.font = `${Math.max(12, Math.min(22, w * 0.03))}px system-ui`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+
+  for (let v = nlMin; v <= nlMax; v++) {
+    const x = numberToX(v, left, right);
+
+    // längre streck vid 0 och 5-steg, annars kortare
+    const isMajor = (v === 0) || (v % 5 === 0);
+    const hh = isMajor ? tickH : tickH * 0.65;
+
+    ctx.strokeStyle = "#111";
+    ctx.beginPath();
+    ctx.moveTo(x, y - hh);
+    ctx.lineTo(x, y + hh);
+    ctx.stroke();
+
+    // labels (alla heltal om intervallet är <= 25, annars glesa)
+    const span = nlMax - nlMin;
+    const showLabel = (span <= 25) ? true : isMajor;
+    if (showLabel) {
+      ctx.fillStyle = "#111";
+      ctx.fillText(String(v), x, y + hh + 6);
+    }
+  }
+
+  // Dot position + parabol-hopp vid rörelse
+  const baseVal = (opts.nlMoveP != null ? nlDisplayValue : nlValue);
+  let x = numberToX(baseVal, left, right);
+  let yOff = 0;
+
+  if (opts.nlMoveP != null) {
+    const p = opts.nlMoveP;
+    const jump = 4 * p * (1 - p);
+    const amp = Math.max(18, h * 0.10);
+    yOff = -amp * jump;
+  }
+
+
+  // dot
+  const r = Math.max(6, Math.min(14.4, w * 0.016));
+  ctx.fillStyle = "#1e88e5";
+  ctx.beginPath();
+  ctx.arc(x, y + yOff, r, 0, Math.PI * 2);
+  ctx.fill();
+}
 
   // ---------- Rendering ----------
   function redraw(opts = {}) {
@@ -560,8 +780,10 @@
         const y = L.baseY + row*(L.dieSize + L.gap);
         drawDie(x, y, L.dieSize, diceValues[i] ?? 1, jitterScale, bounceScale);
       }
+    } else if (mode === "clock") {
+    drawClock();
     } else {
-      drawClock();
+      drawNumberLine(opts);
     }
   }
 
