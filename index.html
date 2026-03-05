@@ -90,6 +90,15 @@
         <label>till:</label>
         <input id="nlMax" type="number" value="10" style="width:90px" />
         <span class="hint" style="margin:0">Tips: t.ex. -10 till 10</span>
+
+        <label style="margin-left:12px;">Figur:</label>
+        <select id="nlFigure">
+          <option value="ball" selected>Boll</option>
+          <option value="rabbit">Kanin</option>
+        </select>
+
+        <label style="margin-left:12px;">Hopplängd:</label>
+        <input id="nlStep" type="number" min="1" max="50" value="1" style="width:90px" />
       </div>
 
 
@@ -157,6 +166,10 @@
   let nlValue = 0;
   let nlAnim = null;
   let nlAnimState = null; // {from,to,t0,duration}
+  let nlFigure = "ball"; // "ball" | "rabbit"
+  let nlStepSize = 1;
+  const rabbitImg = new Image();
+  rabbitImg.src = "rabbit.png";
 
   // ---------- Elements ----------
   const setupCard = document.getElementById("setupCard");
@@ -178,6 +191,8 @@
   const intervalEl = document.getElementById("interval");
   const nlMinEl = document.getElementById("nlMin");
   const nlMaxEl = document.getElementById("nlMax");
+  const nlFigureEl = document.getElementById("nlFigure");
+  const nlStepEl = document.getElementById("nlStep");
 
   const vizTitle = document.getElementById("vizTitle");
   const answerPill = document.getElementById("answerPill");
@@ -243,6 +258,16 @@
     }
   });
 
+  nlFigureEl.addEventListener("change", () => {
+    nlFigure = nlFigureEl.value;
+    if (!vizCard.classList.contains("hidden") && mode === "numberline") redraw();
+  });
+
+  nlStepEl.addEventListener("change", () => {
+    const n = parseInt(nlStepEl.value || "1", 10);
+    nlStepSize = clamp(Number.isNaN(n) ? 1 : n, 1, 200);
+    nlStepEl.value = String(nlStepSize);
+  });
 
   numDiceEl.addEventListener("change", () => {
     diceN = clamp(parseInt(numDiceEl.value || "2", 10), 1, 24);
@@ -276,6 +301,11 @@
 
       nlMin = a;
       nlMax = b;
+
+      nlFigure = nlFigureEl.value;
+      const s = parseInt(nlStepEl.value || "1", 10);
+      nlStepSize = clamp(Number.isNaN(s) ? 1 : s, 1, 200);
+      nlStepEl.value = String(nlStepSize);
 
       // skriv tillbaka (så UI visar vad som faktiskt gäller)
       nlMinEl.value = String(nlMin);
@@ -662,7 +692,7 @@ function moveNumberLine(step) {
   const base = (nlAnimState ? nlDisplayValue : nlValue);
 
   // vi vill flytta exakt ett helt steg i heltal
-  const nextInt = clamp(Math.round(base) + step, nlMin, nlMax);
+  const nextInt = clamp(Math.round(base) + step * nlStepSize, nlMin, nlMax);
 
   if (nlAnimState && nextInt === nlAnimState.to) return;
   if (!nlAnimState && nextInt === nlValue) return;
@@ -782,12 +812,17 @@ function drawNumberLine(opts = {}) {
   }
 
 
-  // dot
-  const r = Math.max(6, Math.min(14.4, w * 0.016));
-  ctx.fillStyle = "#1e88e5";
-  ctx.beginPath();
-  ctx.arc(x, y + yOff, r, 0, Math.PI * 2);
-  ctx.fill();
+    // figure (ball or rabbit)
+  if (nlFigure === "rabbit" && rabbitImg.complete && rabbitImg.naturalWidth > 0) {
+    const size = Math.max(28, Math.min(64, w * 0.06)); // kaninens storlek i px
+    ctx.drawImage(rabbitImg, x - size/2, (y + yOff) - size, size, size);
+  } else {
+    const r = Math.max(6, Math.min(14.4, w * 0.016));
+    ctx.fillStyle = "#1e88e5";
+    ctx.beginPath();
+    ctx.arc(x, y + yOff, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
 }
 
   // ---------- Rendering ----------
