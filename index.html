@@ -169,6 +169,17 @@
   let nlFigure = "ball"; // "ball" | "rabbit"
   let nlStepSize = 1;
   const rabbitImg = new Image();
+
+  rabbitImg.onload = () => {
+    if (!vizCard.classList.contains("hidden") && mode === "numberline" && nlFigure === "rabbit") {
+      redraw();
+    }
+  };
+
+  rabbitImg.onerror = () => {
+    console.error("Kunde inte ladda rabbit.png. Kontrollera sökväg/filnamn.");
+  };
+
   rabbitImg.src = "rabbit.png";
 
   // ---------- Elements ----------
