@@ -92,6 +92,8 @@
           <option value="10">10-minuterssteg</option>
           <option value="15">15-minuterssteg</option>
           <option value="20">20-minuterssteg</option>
+          <option value="30">Halvtimmessteg (00 och 30 minuter)</option>
+          <option value="60">Heltimmessteg (00 minuter)</option>
           <option value="all">Samtliga femminuterssteg</option>
         </select>
         <span class="hint" style="margin:0">25 och 35 minuter (5 i/över halv) slumpas aldrig.</span>
@@ -104,14 +106,21 @@
         <input id="nlMax" type="number" value="10" style="width:90px" />
         <span class="hint" style="margin:0">Tips: t.ex. -10 till 10</span>
 
-        <label style="margin-left:12px;">Figur:</label>
-        <select id="nlFigure">
-          <option value="ball" selected>Boll</option>
-          <option value="rabbit">Kanin</option>
+        <label for="nlActivity">Övning:</label>
+        <select id="nlActivity">
+          <option value="move" selected>Hoppa på talraden</option>
+          <option value="guess">Gissa talet</option>
         </select>
 
-        <label style="margin-left:12px;">Hopplängd:</label>
-        <input id="nlStep" type="number" min="1" max="50" value="1" style="width:90px" />
+        <div class="row" id="nlMoveOptions">
+          <label for="nlFigure">Figur:</label>
+          <select id="nlFigure">
+            <option value="ball" selected>Boll</option>
+            <option value="rabbit">Kanin</option>
+          </select>
+          <label for="nlStep">Hopplängd:</label>
+          <input id="nlStep" type="number" min="1" max="50" value="1" style="width:90px" />
+        </div>
       </div>
 
       <div class="row hidden" id="tenFrameOptions">
@@ -178,6 +187,11 @@
             <input id="tenFrameGuess" type="number" min="0" max="10" step="1" inputmode="numeric" autocomplete="off" aria-describedby="balanceStatus" />
           </div>
           <p class="balanceStatus hidden" id="balanceStatus" role="status" aria-live="polite"></p>
+          <div class="guessControl hidden" id="nlGuessControl">
+            <label for="nlGuessInput" id="nlGuessLabel">Gissa talet:</label>
+            <input id="nlGuessInput" type="number" step="1" inputmode="numeric" autocomplete="off" aria-describedby="nlGuessStatus" />
+          </div>
+          <p class="balanceStatus hidden" id="nlGuessStatus" role="status" aria-live="polite"></p>
         </div>
 
         <div class="vizBottom">
@@ -215,6 +229,7 @@
   let nlAnimState = null; // {from,to,t0,duration}
   let nlFigure = "ball"; // "ball" | "rabbit"
   let nlStepSize = 1;
+  let nlActivity = "move"; // "move" | "guess"
 
   // Tioram state
   let tenFrameTask = { type: "complete", total: 10, shown: 5, missing: 5 };
@@ -276,6 +291,12 @@
   const nlMaxEl = document.getElementById("nlMax");
   const nlFigureEl = document.getElementById("nlFigure");
   const nlStepEl = document.getElementById("nlStep");
+  const nlActivityEl = document.getElementById("nlActivity");
+  const nlMoveOptions = document.getElementById("nlMoveOptions");
+  const nlGuessInput = document.getElementById("nlGuessInput");
+  const nlGuessControl = document.getElementById("nlGuessControl");
+  const nlGuessLabel = document.getElementById("nlGuessLabel");
+  const nlGuessStatus = document.getElementById("nlGuessStatus");
 
   const vizTitle = document.getElementById("vizTitle");
   const answerPill = document.getElementById("answerPill");
@@ -541,6 +562,7 @@
 
   toggleAnswerBtn.addEventListener("click", () => setAnswerVisibility(!showAnswer));
   tenFrameGuessEl.addEventListener("input", updateTenFrameGuess);
+  nlGuessInput.addEventListener("input", updateNumberLineGuess);
 
   soundEnabledEl.addEventListener("change", () => {
     soundEnabled = !!soundEnabledEl.checked;
@@ -549,6 +571,11 @@
   nlFigureEl.addEventListener("change", () => {
     nlFigure = nlFigureEl.value;
     if (!vizCard.classList.contains("hidden") && mode === "numberline") redraw();
+  });
+
+  nlActivityEl.addEventListener("change", () => {
+    nlActivity = nlActivityEl.value;
+    nlMoveOptions.classList.toggle("hidden", nlActivity === "guess");
   });
 
   nlStepEl.addEventListener("change", () => {
@@ -591,6 +618,7 @@
       nlMin = a;
       nlMax = b;
 
+      nlActivity = nlActivityEl.value;
       nlFigure = nlFigureEl.value;
       const s = parseInt(nlStepEl.value || "1", 10);
       nlStepSize = clamp(Number.isNaN(s) ? 1 : s, 1, 200);
@@ -642,7 +670,7 @@
 
   window.addEventListener("keydown", (e) => {
     if (vizCard.classList.contains("hidden")) return;
-    if (mode !== "numberline") return;
+    if (mode !== "numberline" || nlActivity !== "move") return;
 
     if (e.key === "ArrowLeft") { e.preventDefault(); moveNumberLine(-1); }
     if (e.key === "ArrowRight") { e.preventDefault(); moveNumberLine(+1); }
@@ -653,13 +681,13 @@
 
   canvas.addEventListener("touchstart", (e) => {
     if (vizCard.classList.contains("hidden")) return;
-    if (mode !== "numberline") return;
+    if (mode !== "numberline" || nlActivity !== "move") return;
     touchStartX = e.touches[0].clientX;
   }, { passive: true });
 
   canvas.addEventListener("touchend", (e) => {
     if (vizCard.classList.contains("hidden")) return;
-    if (mode !== "numberline") return;
+    if (mode !== "numberline" || nlActivity !== "move") return;
     if (touchStartX == null) return;
 
     const endX = e.changedTouches[0].clientX;
@@ -803,13 +831,18 @@
     actionBtn.onclick = () => newClockTimeAnimated();
   }
 
-  function randomTime(interval, excludedMinute = null) {
-    const h = randInt(0, 11);
+  function randomTime(interval, excludedMinute = null, excludedHour = null) {
     const step = interval === "all" ? 5 : Number(interval);
     const possibleMinutes = Array.from({ length: 60 }, (_, minute) => minute)
-      .filter(minute => minute !== 25 && minute !== 35 && minute % step === 0)
-      .filter(minute => minute !== excludedMinute);
-    const m = possibleMinutes[randInt(0, possibleMinutes.length - 1)];
+      .filter(minute => minute !== 25 && minute !== 35 && minute % step === 0);
+    const availableMinutes = possibleMinutes.length > 1
+      ? possibleMinutes.filter(minute => minute !== excludedMinute)
+      : possibleMinutes;
+    // Heltimmar har bara minutläget 0, så timmen ändras i stället.
+    const possibleHours = Array.from({ length: 12 }, (_, hour) => hour)
+      .filter(hour => possibleMinutes.length > 1 || hour !== excludedHour);
+    const h = possibleHours[randInt(0, possibleHours.length - 1)];
+    const m = availableMinutes[randInt(0, availableMinutes.length - 1)];
     return { h, m };
   }
 
@@ -817,6 +850,12 @@
     const fullTurn = Math.PI * 2;
     const angleFromTwelve = (clampAngle(clockAngles.min) + Math.PI / 2) % fullTurn;
     return Math.round((angleFromTwelve / fullTurn) * 60) % 60;
+  }
+
+  function getDisplayedHour() {
+    const fullTurn = Math.PI * 2;
+    const angleFromTwelve = (clampAngle(clockAngles.hour) + Math.PI / 2) % fullTurn;
+    return Math.round((angleFromTwelve / fullTurn) * 12) % 12;
   }
 
   function formatTime(t) {
@@ -850,7 +889,7 @@
 
     playClockSound();
 
-    const newT = randomTime(interval, getDisplayedMinute());
+    const newT = randomTime(interval, getDisplayedMinute(), getDisplayedHour());
 
     const targetMin = clampAngle(-Math.PI/2 + (newT.m/60)*Math.PI*2);
     const targetHour = clampAngle(-Math.PI/2 + ((newT.h%12)/12)*Math.PI*2 + (newT.m/60)*(Math.PI*2/12));
@@ -1330,30 +1369,77 @@
   }
   // #endregion
 
+  // #region Talrad och gissningar
+  class NumberLineGuess {
+    constructor() {
+      this.reset();
+    }
+
+    reset() {
+      this.value = null;
+      this.text = "";
+      this.error = "";
+    }
+
+    update(text, min, max, badInput = false) {
+      this.text = text.trim();
+      const value = Number(this.text);
+      const isEmpty = this.text === "" && !badInput;
+      const isValid = !badInput && Number.isInteger(value) && value >= min && value <= max;
+      this.error = isEmpty || isValid ? "" : `Skriv ett heltal mellan ${min} och ${max}.`;
+      this.value = !isEmpty && isValid ? value : null;
+    }
+
+    isCorrect(target) {
+      return this.value !== null && this.value === target;
+    }
+  }
+
+  const nlGuess = new NumberLineGuess();
+
   function startNumberLineView() {
-  vizTitle.textContent = "Talrad";
-  actionBtn.textContent = "Slumpa punkt";
+    const isGuessTask = nlActivity === "guess";
+    vizTitle.textContent = isGuessTask ? "Talrad – gissa talet" : "Talrad";
+    actionBtn.textContent = "Slumpa punkt";
+    leftBtn.classList.toggle("hidden", isGuessTask);
+    rightBtn.classList.toggle("hidden", isGuessTask);
+    leftBtn.onclick = () => moveNumberLine(-1);
+    rightBtn.onclick = () => moveNumberLine(+1);
+    actionBtn.onclick = () => {
+      playJumpSound();
+      randomizeNumberLinePoint();
+    };
+    randomizeNumberLinePoint(false);
+  }
 
-  nlValue = randInt(nlMin, nlMax);
-  nlDisplayValue = nlValue;              // ✅ VIKTIGT
-  setFacit(String(nlValue));
-  redraw();
-
-  leftBtn.classList.remove("hidden");
-  rightBtn.classList.remove("hidden");
-
-  leftBtn.onclick = () => moveNumberLine(-1);
-  rightBtn.onclick = () => moveNumberLine(+1);
-
-  actionBtn.onclick = () => {
+  function randomizeNumberLinePoint(excludeCurrent = true) {
     stopAllAnimations();
     stopNumberlineAnim();
-    nlValue = randInt(nlMin, nlMax);
-    nlDisplayValue = nlValue;            // ✅ bra (du hade den)
+    if (nlActivity === "guess" && excludeCurrent && nlValue >= nlMin && nlValue <= nlMax) {
+      // Välj bland alla övriga heltal så att nästa uppgift får en ny punkt.
+      const next = randInt(nlMin, nlMax - 1);
+      nlValue = next >= nlValue ? next + 1 : next;
+    } else {
+      nlValue = randInt(nlMin, nlMax);
+    }
+    nlDisplayValue = nlValue;
+    nlGuess.reset();
+    nlGuessInput.value = "";
+    nlGuessInput.min = String(nlMin);
+    nlGuessInput.max = String(nlMax);
+    nlGuessInput.setCustomValidity("");
     setFacit(String(nlValue));
     redraw();
-  };
-}
+  }
+
+  function updateNumberLineGuess() {
+    if (mode !== "numberline" || nlActivity !== "guess" || showAnswer) return;
+    const wasCorrect = nlGuess.isCorrect(nlValue);
+    nlGuess.update(nlGuessInput.value, nlMin, nlMax, !!nlGuessInput.validity?.badInput);
+    nlGuessInput.setCustomValidity(nlGuess.error);
+    if (nlGuess.isCorrect(nlValue) && !wasCorrect) playTaskSound();
+    redraw();
+  }
 
 
 function stopNumberlineAnim() {
@@ -1363,6 +1449,7 @@ function stopNumberlineAnim() {
 }
 
 function moveNumberLine(step) {
+  if (nlActivity === "guess") return;
   // Om animation pågår: utgå från nuvarande "display"-värde
   const base = (nlAnimState ? nlDisplayValue : nlValue);
 
@@ -1429,77 +1516,136 @@ function numberToX(v, left, right) {
   return left + t * (right - left);
 }
 
-function drawNumberLine(opts = {}) {
-  const w = canvas.width / (window.devicePixelRatio || 1);
-  const h = canvas.height / (window.devicePixelRatio || 1);
+  function getNumberLineLayout() {
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    const padX = Math.max(18, w * 0.08);
+    const tickH = Math.max(10, h * 0.035);
+    const fontSize = Math.max(12, Math.min(22, w * 0.03));
+    const compact = h < 340;
+    const controlHeight = compact ? 30 : 57;
+    const y = Math.min(h * 0.55, h - controlHeight - 32 - tickH - fontSize - 18);
+    return { w, h, left: padX, right: w - padX, y, tickH, fontSize, compact };
+  }
 
-  const padX = Math.max(18, w * 0.08);
-  const y = h * 0.55;
-  const left = padX;
-  const right = w - padX;
-
-  // line
-  ctx.strokeStyle = "#111";
-  ctx.lineWidth = Math.max(2, Math.min(4, w / 300));
-  ctx.beginPath();
-  ctx.moveTo(left, y);
-  ctx.lineTo(right, y);
-  ctx.stroke();
-
-  // ticks
-  const tickH = Math.max(10, h * 0.035);
-  ctx.lineWidth = Math.max(2, Math.min(3, w / 400));
-  ctx.font = `${Math.max(12, Math.min(22, w * 0.03))}px system-ui`;
-  ctx.textAlign = "center";
-  ctx.textBaseline = "top";
-
-  for (let v = nlMin; v <= nlMax; v++) {
-    const x = numberToX(v, left, right);
-
-    // längre streck vid 0 och 5-steg, annars kortare
-    const isMajor = (v === 0) || (v % 5 === 0);
-    const hh = isMajor ? tickH : tickH * 0.65;
-
+  function drawNumberLineAxis(layout) {
+    const { w, left, right, y, tickH, fontSize } = layout;
     ctx.strokeStyle = "#111";
+    ctx.lineWidth = Math.max(2, Math.min(4, w / 300));
     ctx.beginPath();
-    ctx.moveTo(x, y - hh);
-    ctx.lineTo(x, y + hh);
+    ctx.moveTo(left, y);
+    ctx.lineTo(right, y);
     ctx.stroke();
 
-    // labels (alla heltal om intervallet är <= 25, annars glesa)
-    const span = nlMax - nlMin;
-    const showLabel = (span <= 25) ? true : isMajor;
-    if (showLabel) {
-      ctx.fillStyle = "#111";
-      ctx.fillText(String(v), x, y + hh + 6);
+    ctx.lineWidth = Math.max(2, Math.min(3, w / 400));
+    ctx.font = `${fontSize}px system-ui`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "top";
+    const showAllLabels = nlMin >= 0 && nlMax <= 10;
+    for (let value = nlMin; value <= nlMax; value++) {
+      const x = numberToX(value, left, right);
+      const isMajor = value % 10 === 0;
+      const tickHeight = isMajor ? tickH : tickH * 0.65;
+      ctx.beginPath();
+      ctx.moveTo(x, y - tickHeight);
+      ctx.lineTo(x, y + tickHeight);
+      ctx.stroke();
+      if (showAllLabels || isMajor) {
+        ctx.fillStyle = "#111";
+        ctx.fillText(String(value), x, y + tickHeight + 6);
+      }
     }
   }
 
-  // Dot position + parabol-hopp vid rörelse
-  const baseVal = (opts.nlMoveP != null ? nlDisplayValue : nlValue);
-  let x = numberToX(baseVal, left, right);
-  let yOff = 0;
+  function drawNumberLineGuess(layout) {
+    const { w, h, left, right, y, tickH, fontSize, compact } = layout;
+    const isCorrect = nlGuess.isCorrect(nlValue);
+    const isRevealed = showAnswer || isCorrect;
+    ctx.fillStyle = "#111";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `600 ${Math.max(16, Math.min(30, w * 0.038, h * 0.08))}px system-ui`;
+    ctx.fillText("Vilket tal ligger den blå punkten på?", w / 2, h * 0.16, w * 0.9);
 
-  if (opts.nlMoveP != null) {
-    const p = opts.nlMoveP;
-    const jump = 4 * p * (1 - p);
-    const amp = Math.max(18, h * 0.10);
-    yOff = -amp * jump;
+    // Båda punkterna ligger på linjen. Bara en rätt gissning gör dem gröna.
+    const radius = Math.max(6, Math.min(14.4, w * 0.016));
+    const hasWrongGuess = !showAnswer && nlGuess.value !== null && !isCorrect;
+    const targetX = numberToX(nlValue, left, right);
+    const guessX = hasWrongGuess ? numberToX(nlGuess.value, left, right) : targetX;
+    const dotsAreClose = hasWrongGuess && Math.abs(targetX - guessX) < radius * 2;
+    const middleX = (targetX + guessX) / 2;
+    const drawDot = (value, color, showLabel) => {
+      const x = numberToX(value, left, right);
+      ctx.save();
+      if (dotsAreClose) {
+        // Dela överlappande ytor mitt mellan talen så att ingen färg döljer den andra.
+        const isLeft = x < middleX;
+        ctx.beginPath();
+        ctx.rect(isLeft ? 0 : middleX, 0, isLeft ? middleX : w - middleX, h);
+        ctx.clip();
+      }
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+      if (showLabel) {
+        ctx.fillStyle = color;
+        ctx.font = `600 ${Math.max(16, Math.min(28, w * 0.032))}px system-ui`;
+        ctx.textBaseline = "bottom";
+        ctx.fillText(String(value), x, y - Math.max(radius, tickH) - 10);
+      }
+    };
+    drawDot(nlValue, isCorrect ? "#257a43" : "#1e88e5", isRevealed);
+    if (hasWrongGuess) {
+      drawDot(nlGuess.value, "#d32f2f", true);
+    }
+
+    nlGuessControl.style.left = `${w / 2}px`;
+    nlGuessControl.style.top = `${y + tickH + fontSize + 18}px`;
+    nlGuessControl.classList.toggle("compact", compact);
+    nlGuessLabel.textContent = showAnswer ? "Facit:" : "Gissa talet:";
+    if (showAnswer) nlGuessInput.value = String(nlValue);
+    else if (nlGuessInput.readOnly) nlGuessInput.value = nlGuess.text;
+    nlGuessInput.readOnly = showAnswer;
+    nlGuessInput.setCustomValidity(showAnswer ? "" : nlGuess.error);
+    const feedback = showAnswer ? `Facit: ${nlValue}.`
+      : nlGuess.error ? nlGuess.error
+      : isCorrect ? "Rätt! Punkterna överlappar och blir gröna."
+      : nlGuess.value === null ? "Skriv din gissning i rutan."
+      : "Försök igen. Din gissning visas med en röd punkt.";
+    if (nlGuessStatus.textContent !== feedback) nlGuessStatus.textContent = feedback;
   }
 
+  function drawNumberLine(opts = {}) {
+    const layout = getNumberLineLayout();
+    const { w, h, left, right, y } = layout;
+    drawNumberLineAxis(layout);
+    if (nlActivity === "guess") {
+      drawNumberLineGuess(layout);
+      return;
+    }
 
-    // figure (ball or rabbit)
-  if (nlFigure === "rabbit" && rabbitImg.complete && rabbitImg.naturalWidth > 0) {
-    const size = Math.max(28, Math.min(64, w * 0.06)); // kaninens storlek i px
-    ctx.drawImage(rabbitImg, x - size/2, (y + yOff) - size, size, size);
-  } else {
-    const r = Math.max(6, Math.min(14.4, w * 0.016));
-    ctx.fillStyle = "#1e88e5";
-    ctx.beginPath();
-    ctx.arc(x, y + yOff, r, 0, Math.PI * 2);
-    ctx.fill();
+    // Den vanliga övningen behåller sina hopp och sitt val av figur.
+    const value = opts.nlMoveP != null ? nlDisplayValue : nlValue;
+    const x = numberToX(value, left, right);
+    let yOff = 0;
+    if (opts.nlMoveP != null) {
+      const p = opts.nlMoveP;
+      yOff = -Math.max(18, h * 0.10) * 4 * p * (1 - p);
+    }
+    if (nlFigure === "rabbit" && rabbitImg.complete && rabbitImg.naturalWidth > 0) {
+      const size = Math.max(28, Math.min(64, w * 0.06));
+      ctx.drawImage(rabbitImg, x - size / 2, y + yOff - size, size, size);
+    } else {
+      const radius = Math.max(6, Math.min(14.4, w * 0.016));
+      ctx.fillStyle = "#1e88e5";
+      ctx.beginPath();
+      ctx.arc(x, y + yOff, radius, 0, Math.PI * 2);
+      ctx.fill();
+    }
   }
-}
+  // #endregion
 
   // ---------- Rendering ----------
   function redraw(opts = {}) {
@@ -1508,6 +1654,9 @@ function drawNumberLine(opts = {}) {
     const hasBalance = mode === "tenframe" && tenFrameGroupingEl.value === "numicon";
     guessControl.classList.toggle("hidden", !hasBalance);
     balanceStatus.classList.toggle("hidden", !hasBalance);
+    const hasNumberLineGuess = mode === "numberline" && nlActivity === "guess";
+    nlGuessControl.classList.toggle("hidden", !hasNumberLineGuess);
+    nlGuessStatus.classList.toggle("hidden", !hasNumberLineGuess);
     ctx.clearRect(0,0,w,h);
 
     if (mode === "dice") {
