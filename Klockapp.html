@@ -1,0 +1,1574 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Matteverktyg</title>
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+    body { margin: 0; background: #f6f6f7; color: #111; }
+    .app { max-width: 1100px; margin: 0 auto; padding: 16px; }
+    .card { background: #fff; border-radius: 14px; padding: 16px; box-shadow: 0 8px 30px rgba(0,0,0,.06); }
+    h1 { font-size: 20px; margin: 0 0 12px; }
+    .row { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .col { display: flex; flex-direction: column; gap: 8px; }
+    label { font-size: 14px; }
+    input[type="number"], select {
+      font-size: 14px; padding: 8px 10px; border: 1px solid #ddd; border-radius: 10px; background: #fff;
+    }
+    button {
+      font-size: 14px; padding: 10px 14px; border: 0; border-radius: 12px; background: #111; color: #fff;
+      cursor: pointer;
+    }
+    button.secondary { background: #e9e9ea; color: #111; }
+    button:disabled { opacity: .6; cursor: not-allowed; }
+    .hint { color: #666; font-size: 13px; margin-top: 8px; }
+    .spacer { height: 10px; }
+    .hidden { display: none !important; }
+
+    /* Visualization */
+    .vizWrap {
+      margin-top: 14px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr) auto;
+      gap: 10px;
+      height: min(78vh, 760px);
+    }
+    .vizTop { display:flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: space-between; }
+    .vizInfo { font-size: 15px; font-weight: 600; }
+    .vizCanvasWrap {
+      background: #fff; border-radius: 14px; box-shadow: inset 0 0 0 1px #eee;
+      overflow: hidden; position: relative; min-width: 0; min-height: 0;
+    }
+    canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; background: white; }
+    #vizCard:fullscreen { box-sizing: border-box; width: 100%; height: 100%; border-radius: 0; }
+    #vizCard:fullscreen .vizWrap { height: 100%; margin-top: 0; }
+    .guessControl { position: absolute; z-index: 1; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .guessControl label { font-size: 13px; font-weight: 600; }
+    .guessControl input { box-sizing: border-box; width: 86px; height: 36px; padding: 4px 6px; text-align: center; font-size: 20px; }
+    .guessControl input:read-only { background: #f0f0f1; }
+    .guessControl input:invalid { border-color: #b3261e; }
+    .guessControl.compact { gap: 0; }
+    .guessControl.compact label { position: absolute; right: calc(100% + 6px); top: 50%; transform: translateY(-50%); white-space: nowrap; font-size: 12px; }
+    .guessControl.compact input { width: 62px; height: 30px; font-size: 18px; }
+    .balanceStatus { position: absolute; left: 8px; right: 8px; bottom: 8px; margin: 0; text-align: center; color: #555; font-size: 14px; }
+    .vizBottom { display:flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; }
+    .pill { padding: 8px 12px; background:#f0f0f1; border-radius: 999px; font-size: 13px; color:#222; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="card" id="setupCard">
+      <h1>Matteverktyg</h1>
+
+      <div class="row">
+        <div class="col">
+          <label><input type="radio" name="mode" value="dice" checked> Slå tärning</label>
+          <label><input type="radio" name="mode" value="clock"> Visa klocka (slumpad tid)</label>
+          <label><input type="radio" name="mode" value="numberline"> Visa talrad</label>
+          <label><input type="radio" name="mode" value="tenframe"> Använd tioram</label>
+          <label><input type="radio" name="mode" value="placevalue"> Träna tiotal och ental</label>
+        </div>
+
+        <div class="col" id="answerOptions" style="margin-left:auto;">
+          <!-- DEFAULT: AVBOCKAD -->
+          <label><input id="showAnswer" type="checkbox"> Visa facit</label>
+          <label><input id="soundEnabled" type="checkbox" checked> Spela ljud</label>
+          <div class="hint">Korta ljud spelas vid nya uppgifter och rörelser.</div>
+        </div>
+      </div>
+
+      <div class="spacer"></div>
+
+      <div class="row" id="diceOptions">
+        <label>Antal tärningar:</label>
+        <input id="numDice" type="number" min="1" max="24" value="2" />
+      </div>
+
+      <div class="row hidden" id="clockOptions">
+        <label for="interval">Slumpa tider i:</label>
+        <select id="interval">
+          <option value="5" selected>5-minuterssteg</option>
+          <option value="10">10-minuterssteg</option>
+          <option value="15">15-minuterssteg</option>
+          <option value="20">20-minuterssteg</option>
+          <option value="all">Samtliga femminuterssteg</option>
+        </select>
+        <span class="hint" style="margin:0">25 och 35 minuter (5 i/över halv) slumpas aldrig.</span>
+      </div>
+
+      <div class="row hidden" id="numberlineOptions">
+        <label>Talrad från:</label>
+        <input id="nlMin" type="number" value="0" style="width:90px" />
+        <label>till:</label>
+        <input id="nlMax" type="number" value="10" style="width:90px" />
+        <span class="hint" style="margin:0">Tips: t.ex. -10 till 10</span>
+
+        <label style="margin-left:12px;">Figur:</label>
+        <select id="nlFigure">
+          <option value="ball" selected>Boll</option>
+          <option value="rabbit">Kanin</option>
+        </select>
+
+        <label style="margin-left:12px;">Hopplängd:</label>
+        <input id="nlStep" type="number" min="1" max="50" value="1" style="width:90px" />
+      </div>
+
+      <div class="row hidden" id="tenFrameOptions">
+        <label for="tenFrameActivity">Övning:</label>
+        <select id="tenFrameActivity">
+          <option value="complete">Komplettera till valt tal</option>
+          <option value="split">Dela upp ett tal</option>
+        </select>
+        <label for="tenFrameTarget">Talområde:</label>
+        <select id="tenFrameTarget">
+          <option value="5">Upp till 5</option>
+          <option value="10" selected>Upp till 10</option>
+        </select>
+        <label for="tenFrameGrouping">Talbild:</label>
+        <select id="tenFrameGrouping">
+          <option value="numicon" selected>Numicon-talformer</option>
+          <option value="pairs">Tioram, grupperad i par</option>
+          <option value="fives">Två rader med 5</option>
+        </select>
+      </div>
+
+      <div class="row hidden" id="placeValueOptions">
+        <label for="placeValueActivity">Övning:</label>
+        <select id="placeValueActivity">
+          <option value="identify">Vilket tal visar klossarna?</option>
+          <option value="build">Bygg talet med klossar</option>
+        </select>
+        <label for="placeValueRange">Talområde:</label>
+        <select id="placeValueRange">
+          <option value="20">Upp till 20</option>
+          <option value="99" selected>Upp till 99</option>
+        </select>
+        <label for="placeValueShapes">Klossar:</label>
+        <select id="placeValueShapes">
+          <option value="numicon" selected>Numicon-talformer</option>
+          <option value="blocks">Tiotalsstavar och entalsklossar</option>
+        </select>
+      </div>
+
+      <div class="spacer"></div>
+      <div class="row">
+        <button id="openBtn">Öppna</button>
+      </div>
+
+      <div class="hint">Tips: På mobilen kan du rotera skärmen. Du kan också använda helskärmsknappen i visualiseringen.</div>
+    </div>
+
+    <div class="card hidden" id="vizCard">
+      <div class="vizWrap">
+        <div class="vizTop">
+          <div class="vizInfo" id="vizTitle">—</div>
+          <div class="row">
+            <span class="pill" id="answerPill">Facit: (dolt)</span>
+            <button class="secondary" id="toggleAnswerBtn" aria-pressed="false">Visa facit</button>
+            <button class="secondary" id="fullscreenBtn">Helskärm</button>
+            <button class="secondary" id="backBtn">Tillbaka</button>
+          </div>
+        </div>
+
+        <div class="vizCanvasWrap" id="canvasContainer">
+          <canvas id="canvas"></canvas>
+          <div class="guessControl hidden" id="guessControl">
+            <label for="tenFrameGuess" id="guessLabel">Ditt tal:</label>
+            <input id="tenFrameGuess" type="number" min="0" max="10" step="1" inputmode="numeric" autocomplete="off" aria-describedby="balanceStatus" />
+          </div>
+          <p class="balanceStatus hidden" id="balanceStatus" role="status" aria-live="polite"></p>
+        </div>
+
+        <div class="vizBottom">
+        <button id="actionBtn">—</button>
+        <button class="secondary" id="leftBtn">←</button>
+        <button class="secondary" id="rightBtn">→</button>
+      </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+(() => {
+  // ---------- State ----------
+  let mode = "dice";
+  let showAnswer = document.getElementById("showAnswer").checked;
+
+  // Dice state
+  let diceN = 2;
+  let diceValues = [];
+  let diceAnim = null;
+
+  // Clock state
+  let interval = "5";
+  let clockTime = { h: 0, m: 0 }; // 0-11, 0-59
+  let clockAngles = { hour: -Math.PI/2, min: -Math.PI/2 };
+  let clockAnim = null;
+
+  // Number line state
+  let nlDisplayValue = 0;
+  let nlMin = 0;
+  let nlMax = 10;
+  let nlValue = 0;
+  let nlAnim = null;
+  let nlAnimState = null; // {from,to,t0,duration}
+  let nlFigure = "ball"; // "ball" | "rabbit"
+  let nlStepSize = 1;
+
+  // Tioram state
+  let tenFrameTask = { type: "complete", total: 10, shown: 5, missing: 5 };
+  let tenFrameGuess = null;
+  let tenFrameGuessText = "";
+  let tenFrameGuessError = "";
+
+  // Place value state
+  let placeValueTask = { type: "identify", number: 0, tens: 0, ones: 0 };
+  let soundEnabled = true;
+
+  const rabbitImg = new Image();
+
+  rabbitImg.onload = () => {
+    if (!vizCard.classList.contains("hidden") && mode === "numberline" && nlFigure === "rabbit") {
+      redraw();
+    }
+  };
+
+  rabbitImg.onerror = () => {
+    console.error("Kunde inte ladda rabbit.png. Kontrollera sökväg/filnamn.");
+  };
+
+  rabbitImg.src = "rabbit.png";
+
+  // ---------- Elements ----------
+  const setupCard = document.getElementById("setupCard");
+  const vizCard = document.getElementById("vizCard");
+  const diceOptions = document.getElementById("diceOptions");
+  const clockOptions = document.getElementById("clockOptions");
+  const numberlineOptions = document.getElementById("numberlineOptions");
+  const tenFrameOptions = document.getElementById("tenFrameOptions");
+  const placeValueOptions = document.getElementById("placeValueOptions");
+
+  const openBtn = document.getElementById("openBtn");
+  const backBtn = document.getElementById("backBtn");
+  const fullscreenBtn = document.getElementById("fullscreenBtn");
+  const toggleAnswerBtn = document.getElementById("toggleAnswerBtn");
+  const actionBtn = document.getElementById("actionBtn");
+  const leftBtn = document.getElementById("leftBtn");
+  const rightBtn = document.getElementById("rightBtn");
+
+
+  const showAnswerEl = document.getElementById("showAnswer");
+  const soundEnabledEl = document.getElementById("soundEnabled");
+  const tenFrameActivityEl = document.getElementById("tenFrameActivity");
+  const tenFrameTargetEl = document.getElementById("tenFrameTarget");
+  const tenFrameGroupingEl = document.getElementById("tenFrameGrouping");
+  const tenFrameGuessEl = document.getElementById("tenFrameGuess");
+  const guessControl = document.getElementById("guessControl");
+  const guessLabel = document.getElementById("guessLabel");
+  const balanceStatus = document.getElementById("balanceStatus");
+  const placeValueActivityEl = document.getElementById("placeValueActivity");
+  const placeValueRangeEl = document.getElementById("placeValueRange");
+  const placeValueShapesEl = document.getElementById("placeValueShapes");
+  const numDiceEl = document.getElementById("numDice");
+  const intervalEl = document.getElementById("interval");
+  const nlMinEl = document.getElementById("nlMin");
+  const nlMaxEl = document.getElementById("nlMax");
+  const nlFigureEl = document.getElementById("nlFigure");
+  const nlStepEl = document.getElementById("nlStep");
+
+  const vizTitle = document.getElementById("vizTitle");
+  const answerPill = document.getElementById("answerPill");
+
+  const canvasContainer = document.getElementById("canvasContainer");
+  const canvas = document.getElementById("canvas");
+  const ctx = canvas.getContext("2d");
+
+  // #region Numicon talbilder
+  // Färger och former följer användarens referensbild. Ett vitt hål visar ett ental.
+  // Udda tal över 1 har ett extra hål uppe till höger och en indragen kant till vänster.
+  class NumiconShapes {
+    constructor(context) {
+      this.ctx = context;
+      this.colors = [null, "#f8ae4c", "#a9bae1", "#ffed00", "#b3d38d", "#e63027",
+        "#00abc5", "#f39aa4", "#009e59", "#674997", "#006cb5"];
+    }
+
+    size(value, unit) {
+      return { width: (value === 1 ? 1 : 2) * unit, height: Math.ceil(value / 2) * unit };
+    }
+
+    drawCentered(value, centerX, centerY, unit) {
+      if (value < 1 || value > 10) return;
+      const size = this.size(value, unit);
+      this.draw(value, centerX - size.width / 2, centerY - size.height / 2, unit);
+    }
+
+    draw(value, x, y, unit) {
+      if (value < 1 || value > 10) return;
+      const context = this.ctx;
+      const size = this.size(value, unit);
+      const hasStep = value > 1 && value % 2 === 1;
+      const points = hasStep
+        ? [[unit, 0], [size.width, 0], [size.width, size.height], [0, size.height], [0, unit], [unit, unit]]
+        : [[0, 0], [size.width, 0], [size.width, size.height], [0, size.height]];
+      const radius = unit * 0.055;
+
+      context.save();
+      context.beginPath();
+      points.forEach((point, index) => {
+        const previous = points[(index + points.length - 1) % points.length];
+        const next = points[(index + 1) % points.length];
+        const beforeLength = Math.hypot(previous[0] - point[0], previous[1] - point[1]);
+        const afterLength = Math.hypot(next[0] - point[0], next[1] - point[1]);
+        const beforeX = x + point[0] + (previous[0] - point[0]) * radius / beforeLength;
+        const beforeY = y + point[1] + (previous[1] - point[1]) * radius / beforeLength;
+        const afterX = x + point[0] + (next[0] - point[0]) * radius / afterLength;
+        const afterY = y + point[1] + (next[1] - point[1]) * radius / afterLength;
+        if (index === 0) context.moveTo(beforeX, beforeY);
+        else context.lineTo(beforeX, beforeY);
+        context.quadraticCurveTo(x + point[0], y + point[1], afterX, afterY);
+      });
+      context.closePath();
+      context.fillStyle = this.colors[value];
+      context.fill();
+      context.strokeStyle = "rgba(0, 0, 0, 0.22)";
+      context.lineWidth = Math.max(0.7, unit * 0.025);
+      context.stroke();
+
+      context.fillStyle = "#fff";
+      for (let row = 0; row < Math.ceil(value / 2); row++) {
+        for (let column = 0; column < (value === 1 ? 1 : 2); column++) {
+          if (hasStep && row === 0 && column === 0) continue;
+          context.beginPath();
+          context.arc(x + (column + 0.5) * unit, y + (row + 0.5) * unit, unit * 0.35, 0, Math.PI * 2);
+          context.fill();
+        }
+      }
+      context.restore();
+    }
+  }
+
+  const numiconShapes = new NumiconShapes(ctx);
+  // #endregion
+
+  let soundContext = null;
+
+  // ---------- Helpers ----------
+  function clamp(v, a, b){ return Math.max(a, Math.min(b, v)); }
+
+  // #region Ritstorlek och helskärm
+  let canvasResizeFrame = null;
+
+  function resizeCanvasToContainer() {
+    const rect = canvasContainer.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const width = Math.max(1, Math.floor(rect.width * dpr));
+    const height = Math.max(1, Math.floor(rect.height * dpr));
+    if (canvas.width !== width) canvas.width = width;
+    if (canvas.height !== height) canvas.height = height;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0); // draw in CSS pixels
+  }
+
+  function scheduleCanvasResize() {
+    if (canvasResizeFrame !== null) return;
+    canvasResizeFrame = requestAnimationFrame(() => {
+      canvasResizeFrame = null;
+      if (vizCard.classList.contains("hidden")) return;
+      resizeCanvasToContainer();
+      redraw();
+    });
+  }
+
+  // Storleken kan ändras utan en window-resize, till exempel när kortet går till helskärm.
+  const canvasSizeObserver = new ResizeObserver(scheduleCanvasResize);
+  canvasSizeObserver.observe(canvasContainer);
+  document.addEventListener("fullscreenchange", () => {
+    fullscreenBtn.textContent = document.fullscreenElement ? "Avsluta helskärm" : "Helskärm";
+    scheduleCanvasResize();
+  });
+  // #endregion
+
+  function withSoundContext(playSound) {
+    if (!soundEnabled) return;
+
+    const AudioContextType = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextType) return;
+
+    try {
+      if (!soundContext) soundContext = new AudioContextType();
+      soundContext.resume().then(() => playSound(soundContext)).catch(() => {});
+    } catch {}
+  }
+
+  function playTone(context, startTime, frequency, duration, peakVolume, waveType = "sine") {
+    const oscillator = context.createOscillator();
+    const volume = context.createGain();
+
+    oscillator.type = waveType;
+    oscillator.frequency.setValueAtTime(frequency, startTime);
+    volume.gain.setValueAtTime(0.0001, startTime);
+    volume.gain.exponentialRampToValueAtTime(peakVolume, startTime + 0.003);
+    volume.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+    oscillator.connect(volume);
+    volume.connect(context.destination);
+    oscillator.start(startTime);
+    oscillator.stop(startTime + duration + 0.005);
+  }
+
+  function playNoiseClick(context, startTime, duration, peakVolume, cutoffFrequency) {
+    const frameCount = Math.max(1, Math.floor(context.sampleRate * duration));
+    const noiseBuffer = context.createBuffer(1, frameCount, context.sampleRate);
+    const noiseSamples = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < frameCount; i++) noiseSamples[i] = Math.random() * 2 - 1;
+
+    const source = context.createBufferSource();
+    const filter = context.createBiquadFilter();
+    const volume = context.createGain();
+
+    source.buffer = noiseBuffer;
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(cutoffFrequency, startTime);
+    volume.gain.setValueAtTime(0.0001, startTime);
+    volume.gain.exponentialRampToValueAtTime(peakVolume, startTime + 0.002);
+    volume.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+
+    source.connect(filter);
+    filter.connect(volume);
+    volume.connect(context.destination);
+    source.start(startTime);
+    source.stop(startTime + duration + 0.005);
+  }
+
+  // #region Built-in sound effects
+  function playJumpSound() {
+    withSoundContext(context => {
+      const startTime = context.currentTime;
+      const oscillator = context.createOscillator();
+      const volume = context.createGain();
+
+      oscillator.type = "sine";
+      oscillator.frequency.setValueAtTime(260, startTime);
+      oscillator.frequency.exponentialRampToValueAtTime(560, startTime + 0.06);
+      oscillator.frequency.exponentialRampToValueAtTime(220, startTime + 0.24);
+
+      volume.gain.setValueAtTime(0.0001, startTime);
+      volume.gain.exponentialRampToValueAtTime(0.16, startTime + 0.02);
+      volume.gain.exponentialRampToValueAtTime(0.0001, startTime + 0.25);
+
+      oscillator.connect(volume);
+      volume.connect(context.destination);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + 0.26);
+    });
+  }
+
+  function playDiceRollSound() {
+    withSoundContext(context => {
+      const startTime = context.currentTime;
+      for (let hit = 0; hit < 12; hit++) {
+        const hitTime = startTime + hit * 0.072 + Math.random() * 0.025;
+        playNoiseClick(context, hitTime, 0.035, 0.13, 1500);
+        playTone(context, hitTime, randInt(150, 260), 0.055, 0.07, "triangle");
+      }
+    });
+  }
+
+  function playTaskSound() {
+    withSoundContext(context => {
+      const startTime = context.currentTime;
+      playTone(context, startTime, 520, 0.08, 0.045);
+      playTone(context, startTime + 0.07, 740, 0.10, 0.04);
+    });
+  }
+
+  function playClockSound() {
+    withSoundContext(context => {
+      const startTime = context.currentTime;
+      for (let tick = 0; tick < 10; tick++) {
+        const tickTime = startTime + tick * 0.2;
+        const frequency = tick % 2 === 0 ? 1050 : 820;
+        playNoiseClick(context, tickTime, 0.012, 0.045, 4200);
+        playTone(context, tickTime, frequency, 0.035, 0.055);
+      }
+    });
+  }
+  // #endregion
+
+  function setFacit(text) {
+    showAnswerEl.checked = showAnswer;
+    toggleAnswerBtn.textContent = showAnswer ? "Dölj facit" : "Visa facit";
+    toggleAnswerBtn.setAttribute("aria-pressed", String(showAnswer));
+    if (!showAnswer) {
+      answerPill.textContent = "Facit: (dolt)";
+      return;
+    }
+    answerPill.textContent = "Facit: " + text;
+  }
+
+  // #region Visa och dölj facit
+  function setAnswerVisibility(visible) {
+    showAnswer = visible;
+    if (vizCard.classList.contains("hidden")) {
+      setFacit("—");
+      return;
+    }
+    if (mode === "dice") setFacit(String(diceValues.reduce((sum, value) => sum + value, 0)));
+    else if (mode === "clock") setFacit(formatTime(clockTime));
+    else if (mode === "numberline") setFacit(String(nlValue));
+    else if (mode === "tenframe") setFacit(getTenFrameAnswer());
+    else if (mode === "placevalue") setFacit(getPlaceValueAnswer());
+    redraw();
+  }
+  // #endregion
+
+  // ---------- UI wiring ----------
+  document.querySelectorAll('input[name="mode"]').forEach(r => {
+    r.addEventListener("change", () => {
+      mode = document.querySelector('input[name="mode"]:checked').value;
+      diceOptions.classList.toggle("hidden", mode !== "dice");
+      clockOptions.classList.toggle("hidden", mode !== "clock");
+      numberlineOptions.classList.toggle("hidden", mode !== "numberline");
+      tenFrameOptions.classList.toggle("hidden", mode !== "tenframe");
+      placeValueOptions.classList.toggle("hidden", mode !== "placevalue");
+    });
+  });
+
+  showAnswerEl.addEventListener("change", () => {
+    setAnswerVisibility(!!showAnswerEl.checked);
+  });
+
+  toggleAnswerBtn.addEventListener("click", () => setAnswerVisibility(!showAnswer));
+  tenFrameGuessEl.addEventListener("input", updateTenFrameGuess);
+
+  soundEnabledEl.addEventListener("change", () => {
+    soundEnabled = !!soundEnabledEl.checked;
+  });
+
+  nlFigureEl.addEventListener("change", () => {
+    nlFigure = nlFigureEl.value;
+    if (!vizCard.classList.contains("hidden") && mode === "numberline") redraw();
+  });
+
+  nlStepEl.addEventListener("change", () => {
+    const n = parseInt(nlStepEl.value || "1", 10);
+    nlStepSize = clamp(Number.isNaN(n) ? 1 : n, 1, 200);
+    nlStepEl.value = String(nlStepSize);
+  });
+
+  numDiceEl.addEventListener("change", () => {
+    diceN = clamp(parseInt(numDiceEl.value || "2", 10), 1, 24);
+    numDiceEl.value = diceN;
+  });
+
+  intervalEl.addEventListener("change", () => {
+    interval = intervalEl.value;
+  });
+
+  openBtn.addEventListener("click", () => {
+    showAnswer = !!showAnswerEl.checked;
+    soundEnabled = !!soundEnabledEl.checked;
+    diceN = clamp(parseInt(numDiceEl.value || "2", 10), 1, 24);
+    interval = intervalEl.value;
+    if (mode === "numberline") {
+      let a = parseInt(nlMinEl.value || "0", 10);
+      let b = parseInt(nlMaxEl.value || "20", 10);
+
+      if (Number.isNaN(a)) a = 0;
+      if (Number.isNaN(b)) b = 20;
+
+      // om användaren skriver "fel" ordning
+      if (a > b) [a, b] = [b, a];
+
+      // begränsa så det inte blir extremt (valfritt, men bra)
+      a = clamp(a, -200, 200);
+      b = clamp(b, -200, 200);
+
+      // minst 1 steg
+      if (a === b) b = a + 1;
+
+      nlMin = a;
+      nlMax = b;
+
+      nlFigure = nlFigureEl.value;
+      const s = parseInt(nlStepEl.value || "1", 10);
+      nlStepSize = clamp(Number.isNaN(s) ? 1 : s, 1, 200);
+      nlStepEl.value = String(nlStepSize);
+
+      // skriv tillbaka (så UI visar vad som faktiskt gäller)
+      nlMinEl.value = String(nlMin);
+      nlMaxEl.value = String(nlMax);
+    }
+
+
+
+    setupCard.classList.add("hidden");
+    vizCard.classList.remove("hidden");
+
+    resizeCanvasToContainer();
+    if (mode === "dice") startDiceView();
+    else if (mode === "clock") startClockView();
+    else if (mode === "numberline") startNumberLineView();
+    else if (mode === "tenframe") startTenFrameView();
+    else startPlaceValueView();
+
+  });
+
+  // FIX: lämna fullscreen innan vi går tillbaka (annars kan UI "låsa")
+  backBtn.addEventListener("click", async () => {
+    stopAllAnimations();
+    stopNumberlineAnim();
+
+    if (document.fullscreenElement) {
+      try { await document.exitFullscreen(); } catch {}
+    }
+
+    setupCard.classList.remove("hidden");
+    vizCard.classList.add("hidden");
+  });
+
+  fullscreenBtn.addEventListener("click", async () => {
+    try {
+      if (!document.fullscreenElement) {
+        await vizCard.requestFullscreen();
+      } else {
+        await document.exitFullscreen();
+      }
+    } catch {}
+  });
+
+  window.addEventListener("resize", scheduleCanvasResize);
+
+  window.addEventListener("keydown", (e) => {
+    if (vizCard.classList.contains("hidden")) return;
+    if (mode !== "numberline") return;
+
+    if (e.key === "ArrowLeft") { e.preventDefault(); moveNumberLine(-1); }
+    if (e.key === "ArrowRight") { e.preventDefault(); moveNumberLine(+1); }
+  });
+
+  // Swipe för talrad (mobil/surfplatta)
+  let touchStartX = null;
+
+  canvas.addEventListener("touchstart", (e) => {
+    if (vizCard.classList.contains("hidden")) return;
+    if (mode !== "numberline") return;
+    touchStartX = e.touches[0].clientX;
+  }, { passive: true });
+
+  canvas.addEventListener("touchend", (e) => {
+    if (vizCard.classList.contains("hidden")) return;
+    if (mode !== "numberline") return;
+    if (touchStartX == null) return;
+
+    const endX = e.changedTouches[0].clientX;
+    const dx = endX - touchStartX;
+    touchStartX = null;
+
+    if (Math.abs(dx) < 25) return; // ignore små svep
+
+    if (dx < 0) moveNumberLine(-1);
+    else moveNumberLine(+1);
+  }, { passive: true });
+
+
+  // ---------- Dice ----------
+  function startDiceView() {
+    leftBtn.classList.add("hidden");
+    rightBtn.classList.add("hidden");
+    vizTitle.textContent = "Tärningar";
+    actionBtn.textContent = "Slå igen";
+    diceValues = Array.from({length: diceN}, () => randInt(1,6));
+    setFacit(String(diceValues.reduce((a,b)=>a+b,0)));
+    redraw();
+
+    actionBtn.onclick = () => rollDiceAnimated();
+  }
+
+  function rollDiceAnimated() {
+    stopAllAnimations();
+    playDiceRollSound();
+
+    const duration = 950; // ms
+    const start = performance.now();
+    const final = Array.from({length: diceN}, () => randInt(1,6));
+
+    function frame(t) {
+      const p = clamp((t - start)/duration, 0, 1);
+      const ease = 1 - (1 - p)*(1 - p);
+
+      if (p < 1) diceValues = Array.from({length: diceN}, () => randInt(1,6));
+      else diceValues = final;
+
+      // jitter + bounce
+      const jitter = (1 - ease);
+      const bounce = Math.abs(Math.sin(p * Math.PI * 3)) * (1 - ease);
+
+      redraw({ diceJitter: jitter, diceBounce: bounce });
+
+      if (p < 1) diceAnim = requestAnimationFrame(frame);
+      else {
+        diceAnim = null;
+        setFacit(String(diceValues.reduce((a,b)=>a+b,0)));
+        redraw(); // final crisp redraw
+      }
+    }
+    diceAnim = requestAnimationFrame(frame);
+  }
+
+  function drawDie(x, y, size, value, jitterScale, bounceScale) {
+    const j = (size * 0.08) * (jitterScale || 0);
+    const dx = (Math.random()*2 - 1) * j;
+    const dy = (Math.random()*2 - 1) * j;
+
+    const b = (size * 0.14) * (bounceScale || 0); // studs uppåt
+    const dy2 = dy - b;
+
+    // shadow
+    ctx.fillStyle = "rgba(0,0,0,0.07)";
+    roundRect(x+6+dx, y+6+dy2, size, size, size*0.12, true, false);
+
+    // body
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = Math.max(2, size/40);
+    roundRect(x+dx, y+dy2, size, size, size*0.12, true, true);
+
+    // pips
+    const margin = size * 0.22;
+    const cx = [x+dx+margin, x+dx+size/2, x+dx+size-margin];
+    const cy = [y+dy2+margin, y+dy2+size/2, y+dy2+size-margin];
+    const r = Math.max(2, size*0.06);
+
+    const pips = {
+      1: [[1,1]],
+      2: [[0,0],[2,2]],
+      3: [[0,0],[1,1],[2,2]],
+      4: [[0,0],[2,0],[0,2],[2,2]],
+      5: [[0,0],[2,0],[1,1],[0,2],[2,2]],
+      6: [[0,0],[2,0],[0,1],[2,1],[0,2],[2,2]],
+    }[value] || [];
+
+    ctx.fillStyle = "black";
+    for (const [ix,iy] of pips) {
+      ctx.beginPath();
+      ctx.arc(cx[ix], cy[iy], r, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+
+  function layoutDice() {
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    const n = diceN;
+
+    // välj grid nära kvadrat
+    let cols = Math.ceil(Math.sqrt(n));
+    let rows = Math.ceil(n / cols);
+
+    const base = Math.min(w, h);
+
+    // ÖKAD SPACING
+    const gap = Math.max(24, base * 0.04);
+    const margin = Math.max(12, base * 0.05);
+
+    const size = Math.floor(Math.min(
+      (w - 2*margin - (cols-1)*gap)/cols,
+      (h - 2*margin - (rows-1)*gap)/rows
+    ));
+    const dieSize = clamp(size, 60, 700);
+
+    // block size and centering
+    const blockW = cols*dieSize + (cols-1)*gap;
+    const blockH = rows*dieSize + (rows-1)*gap;
+    const baseX = (w - blockW)/2;
+    const baseY = (h - blockH)/2;
+
+    return { w, h, cols, rows, gap, margin, dieSize, baseX, baseY };
+  }
+
+  // ---------- Clock ----------
+  function startClockView() {
+    leftBtn.classList.add("hidden");
+    rightBtn.classList.add("hidden");
+    vizTitle.textContent = "Klocka";
+    actionBtn.textContent = "Slumpa ny tid";
+
+    clockTime = randomTime(interval);
+    setClockAnglesInstant(clockTime);
+    setFacit(formatTime(clockTime));
+    redraw();
+
+    actionBtn.onclick = () => newClockTimeAnimated();
+  }
+
+  function randomTime(interval, excludedMinute = null) {
+    const h = randInt(0, 11);
+    const step = interval === "all" ? 5 : Number(interval);
+    const possibleMinutes = Array.from({ length: 60 }, (_, minute) => minute)
+      .filter(minute => minute !== 25 && minute !== 35 && minute % step === 0)
+      .filter(minute => minute !== excludedMinute);
+    const m = possibleMinutes[randInt(0, possibleMinutes.length - 1)];
+    return { h, m };
+  }
+
+  function getDisplayedMinute() {
+    const fullTurn = Math.PI * 2;
+    const angleFromTwelve = (clampAngle(clockAngles.min) + Math.PI / 2) % fullTurn;
+    return Math.round((angleFromTwelve / fullTurn) * 60) % 60;
+  }
+
+  function formatTime(t) {
+    let hh = t.h % 12;
+    if (hh === 0) hh = 12;
+    return String(hh).padStart(2,"0") + ":" + String(t.m).padStart(2,"0");
+  }
+
+  function setClockAnglesInstant(t) {
+    const minAng = clampAngle(-Math.PI/2 + (t.m/60)*Math.PI*2);
+    const hourAng = clampAngle(-Math.PI/2 + ((t.h%12)/12)*Math.PI*2 + (t.m/60)*(Math.PI*2/12));
+    clockAngles.min = minAng;
+    clockAngles.hour = hourAng;
+  }
+
+  function clampAngle(a) {
+    const two = Math.PI*2;
+    a = a % two;
+    if (a < 0) a += two;
+    return a;
+  }
+
+  function clockwiseDelta(start, target) {
+    start = clampAngle(start);
+    target = clampAngle(target);
+    return (target - start + Math.PI*2) % (Math.PI*2);
+  }
+
+  function newClockTimeAnimated() {
+    stopAllAnimations();
+
+    playClockSound();
+
+    const newT = randomTime(interval, getDisplayedMinute());
+
+    const targetMin = clampAngle(-Math.PI/2 + (newT.m/60)*Math.PI*2);
+    const targetHour = clampAngle(-Math.PI/2 + ((newT.h%12)/12)*Math.PI*2 + (newT.m/60)*(Math.PI*2/12));
+
+    const startMin = clockAngles.min;
+    const startHour = clockAngles.hour;
+
+    const dMin = clockwiseDelta(startMin, targetMin);
+    const dHour = clockwiseDelta(startHour, targetHour);
+
+    const duration = 2000;
+    const start = performance.now();
+
+    function frame(t) {
+      const p = clamp((t - start)/duration, 0, 1);
+      const ease = 1 - (1 - p)*(1 - p);
+
+      clockAngles.min = clampAngle(startMin + dMin*ease);
+      clockAngles.hour = clampAngle(startHour + dHour*ease);
+
+      redraw();
+
+      if (p < 1) clockAnim = requestAnimationFrame(frame);
+      else {
+        clockAnim = null;
+        clockTime = newT;
+        setFacit(formatTime(clockTime));
+      }
+    }
+    clockAnim = requestAnimationFrame(frame);
+  }
+
+  function drawClock() {
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    const size = Math.min(w, h);
+
+    const cx = w/2, cy = h/2;
+    const r = size * 0.42;
+
+    // face
+    ctx.fillStyle = "white";
+    ctx.strokeStyle = "black";
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(cx, cy, r, 0, Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+
+    // markers + numbers (12 up)
+    for (let i=0; i<12; i++) {
+      const ang = -Math.PI/2 + i*(Math.PI*2/12);
+      const x1 = cx + (r*0.88)*Math.cos(ang);
+      const y1 = cy + (r*0.88)*Math.sin(ang);
+      const x2 = cx + (r*0.98)*Math.cos(ang);
+      const y2 = cy + (r*0.98)*Math.sin(ang);
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x1,y1); ctx.lineTo(x2,y2);
+      ctx.stroke();
+
+      const num = ((i + 11) % 12) + 1;
+      const tx = cx + (r*0.72)*Math.cos(ang);
+      const ty = cy + (r*0.72)*Math.sin(ang);
+      ctx.fillStyle = "#111";
+      ctx.font = `${Math.max(12, r*0.10)}px system-ui`;
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(String(num), tx, ty);
+    }
+
+    // Kort visare (timvisare) är röd.
+    ctx.strokeStyle = "#e53935";
+    ctx.lineCap = "round";
+    ctx.lineWidth = Math.max(4, r/18);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + (r*0.42)*Math.cos(clockAngles.hour),
+               cy + (r*0.42)*Math.sin(clockAngles.hour));
+    ctx.stroke();
+
+    // Lång visare (minutvisare) är blå.
+    ctx.strokeStyle = "#1e88e5"
+    ctx.lineWidth = Math.max(3, r/24);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + (r*0.62)*Math.cos(clockAngles.min),
+               cy + (r*0.62)*Math.sin(clockAngles.min));
+    ctx.stroke();
+
+    // center dot
+    ctx.fillStyle = "#111";
+    ctx.beginPath();
+    ctx.arc(cx, cy, 6, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // #region Ten-frame activities
+  function startTenFrameView() {
+    leftBtn.classList.add("hidden");
+    rightBtn.classList.add("hidden");
+    vizTitle.textContent = "Tioram";
+    actionBtn.textContent = "Slumpa ny uppgift";
+    actionBtn.onclick = generateTenFrameTask;
+    generateTenFrameTask();
+  }
+
+  function generateTenFrameTask() {
+    const taskType = tenFrameActivityEl.value;
+    const limit = Number(tenFrameTargetEl.value);
+    let total;
+    let shown;
+
+    if (taskType === "complete") {
+      total = limit;
+      shown = randInt(1, total - 1);
+    } else {
+      total = randInt(2, limit);
+      shown = randInt(1, total - 1);
+    }
+
+    tenFrameTask = { type: taskType, total, shown, missing: total - shown };
+    tenFrameGuess = null;
+    tenFrameGuessText = "";
+    tenFrameGuessError = "";
+    tenFrameGuessEl.value = "";
+    tenFrameGuessEl.setCustomValidity("");
+    setFacit(getTenFrameAnswer());
+    playTaskSound();
+    redraw();
+  }
+
+  function getTenFrameAnswer() {
+    return `${tenFrameTask.shown} + ${tenFrameTask.missing} = ${tenFrameTask.total}`;
+  }
+
+  function drawTenFrame() {
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    const isCompleteTask = tenFrameTask.type === "complete";
+    const prompt = isCompleteTask
+      ? `Hur många saknas till ${tenFrameTask.total}?`
+      : `Dela upp talet ${tenFrameTask.total}. En del är ${tenFrameTask.shown}.`;
+
+    ctx.fillStyle = "#111";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `600 ${Math.max(21, Math.min(38, w * 0.045))}px system-ui`;
+    if (tenFrameGroupingEl.value === "numicon") {
+      drawNumiconBalance(w, h, prompt);
+      return;
+    }
+    const columns = tenFrameGroupingEl.value === "pairs" ? 2 : 5;
+    ctx.fillText(prompt, w / 2, h * (columns === 2 ? 0.14 : 0.18), w * 0.9);
+
+    const rows = 10 / columns;
+    const cellSize = Math.max(24, Math.min(68, w * (columns === 2 ? 0.22 : 0.13), h * (columns === 2 ? 0.12 : 0.19)));
+    const gap = Math.max(7, cellSize * 0.14);
+    const frameWidth = cellSize * columns + gap * (columns - 1);
+    const frameHeight = cellSize * rows + gap * (rows - 1);
+    const startX = (w - frameWidth) / 2;
+    const startY = (h - frameHeight) / 2 + h * 0.08;
+
+    for (let i = 0; i < 10; i++) {
+      const row = Math.floor(i / columns);
+      const column = i % columns;
+      const x = startX + column * (cellSize + gap);
+      const y = startY + row * (cellSize + gap);
+      const isActive = i < tenFrameTask.total;
+      const isShown = i < tenFrameTask.shown;
+      const isRevealed = showAnswer && isActive && !isShown;
+
+      ctx.fillStyle = isShown ? "#1e88e5" : isRevealed ? "#f4b400" : isActive ? "#fff" : "#f1f2f4";
+      ctx.strokeStyle = isActive ? "#444" : "#d6d6d6";
+      ctx.lineWidth = Math.max(2, cellSize * 0.04);
+      roundRect(x, y, cellSize, cellSize, cellSize * 0.12, true, true);
+
+      if (isShown || isRevealed) {
+        ctx.fillStyle = isShown ? "#1e88e5" : "#f4b400";
+        ctx.beginPath();
+        ctx.arc(x + cellSize / 2, y + cellSize / 2, cellSize * 0.31, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
+  // #region Talet som saknas och balansvågen
+  function updateTenFrameGuess() {
+    if (showAnswer) return;
+    const wasBalanced = tenFrameGuess !== null && tenFrameTask.shown + tenFrameGuess === tenFrameTask.total;
+    tenFrameGuessText = tenFrameGuessEl.value.trim();
+    const value = Number(tenFrameGuessText);
+    const isValid = tenFrameGuessText === "" || (Number.isInteger(value) && value >= 0 && value <= 10);
+    tenFrameGuessError = isValid ? "" : "Skriv ett heltal mellan 0 och 10.";
+    tenFrameGuessEl.setCustomValidity(tenFrameGuessError);
+    tenFrameGuess = isValid && tenFrameGuessText !== "" ? value : null;
+    const isBalanced = tenFrameGuess !== null && tenFrameTask.shown + tenFrameGuess === tenFrameTask.total;
+    if (isBalanced && !wasBalanced) playTaskSound();
+    redraw();
+  }
+
+  function getBalanceValues() {
+    const guess = showAnswer ? tenFrameTask.missing : tenFrameGuess;
+    const left = tenFrameTask.shown + (guess ?? 0);
+    const right = tenFrameTask.total;
+    return { guess, left, right, difference: left - right };
+  }
+
+  function drawNumiconBalance(w, h, prompt) {
+    ctx.fillStyle = "#111";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `600 ${Math.max(16, Math.min(38, w * 0.045, h * 0.07))}px system-ui`;
+    ctx.fillText(prompt, w / 2, h * 0.11, w * 0.92);
+
+    const values = getBalanceValues();
+    const unit = Math.max(8, Math.min(66, w * 0.90 / 12.6, h * 0.38 / 5));
+    const centerX = w / 2;
+    const beamY = h * 0.64;
+    const leftX = centerX - unit * 3.35;
+    const rightX = centerX + unit * 3.35;
+    const rise = Math.min(unit * 0.75, h * 0.055) * clamp(values.difference / Math.max(1, values.right * 0.6), -1, 1);
+    // Större vikt på vänster sida ger större y-värde där: vänster skål sjunker.
+    const leftY = beamY + rise;
+    const rightY = beamY - rise;
+    const partX = leftX - unit * 1.6;
+    const guessX = leftX + unit * 1.6;
+    const isBalanced = values.guess !== null && values.difference === 0;
+    drawBalanceScale(centerX, beamY, leftX, leftY, rightX, rightY, unit, h, isBalanced);
+
+    const partSize = numiconShapes.size(tenFrameTask.shown, unit);
+    numiconShapes.draw(tenFrameTask.shown, partX - partSize.width / 2, leftY - partSize.height, unit);
+    const totalSize = numiconShapes.size(tenFrameTask.total, unit);
+    numiconShapes.draw(tenFrameTask.total, rightX - totalSize.width / 2, rightY - totalSize.height, unit);
+
+    if (values.guess === null) {
+      ctx.fillStyle = "#fafafa";
+      ctx.strokeStyle = "#8b8b8b";
+      ctx.lineWidth = 2;
+      ctx.setLineDash([unit * 0.15, unit * 0.12]);
+      roundRect(guessX - unit * 0.9, leftY - unit * 1.8, unit * 1.8, unit * 1.8, unit * 0.12, true, true);
+      ctx.setLineDash([]);
+      ctx.fillStyle = "#555";
+      ctx.font = `600 ${unit * 1.15}px system-ui`;
+      ctx.fillText("?", guessX, leftY - unit * 0.9);
+    } else if (values.guess === 0) {
+      ctx.fillStyle = "#555";
+      ctx.font = `600 ${unit * 1.1}px system-ui`;
+      ctx.fillText("0", guessX, leftY - unit * 0.9);
+    } else {
+      const guessSize = numiconShapes.size(values.guess, unit);
+      numiconShapes.draw(values.guess, guessX - guessSize.width / 2, leftY - guessSize.height, unit);
+    }
+
+    ctx.fillStyle = "#111";
+    ctx.font = `500 ${unit * 0.85}px system-ui`;
+    ctx.fillText("+", leftX, leftY - unit * 1.3);
+    ctx.fillText("=", centerX, beamY - unit * 2.1);
+
+    // HTML-fältet använder samma koordinater som frågerutan och följer ändrad ritstorlek.
+    guessControl.style.left = `${guessX}px`;
+    guessControl.style.top = `${leftY + Math.max(8, h * 0.024)}px`;
+    guessControl.classList.toggle("compact", h < 340);
+    guessLabel.textContent = showAnswer ? "Facit:" : "Ditt tal:";
+    if (showAnswer) tenFrameGuessEl.value = String(tenFrameTask.missing);
+    else if (tenFrameGuessEl.readOnly) tenFrameGuessEl.value = tenFrameGuessText;
+    tenFrameGuessEl.readOnly = showAnswer;
+    tenFrameGuessEl.setCustomValidity(showAnswer ? "" : tenFrameGuessError);
+    const feedback = !showAnswer && tenFrameGuessError ? tenFrameGuessError
+      : values.guess === null ? "Skriv ett tal under frågetecknet."
+      : isBalanced ? "Vågen är i balans."
+      : values.difference < 0 ? "Höger är tyngre."
+      : "Vänster är tyngre.";
+    if (balanceStatus.textContent !== feedback) balanceStatus.textContent = feedback;
+  }
+
+  function drawBalanceScale(centerX, beamY, leftX, leftY, rightX, rightY, unit, h, isBalanced) {
+    ctx.save();
+    const color = isBalanced ? "#257a43" : "#52606d";
+    const footY = Math.min(h * 0.88, beamY + unit * 3.4);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = Math.max(2, unit * 0.06);
+    ctx.beginPath();
+    ctx.moveTo(centerX, beamY);
+    ctx.lineTo(centerX, footY - unit * 0.45);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(centerX, footY - unit * 0.65);
+    ctx.lineTo(centerX + unit * 0.65, footY);
+    ctx.lineTo(centerX - unit * 0.65, footY);
+    ctx.closePath();
+    ctx.fillStyle = "#e8edf0";
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.beginPath();
+    ctx.moveTo(leftX, leftY);
+    ctx.lineTo(rightX, rightY);
+    ctx.stroke();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(centerX, beamY, Math.max(3, unit * 0.075), 0, Math.PI * 2);
+    ctx.fill();
+    for (const [panX, panY] of [[leftX, leftY], [rightX, rightY]]) {
+      roundRect(panX - unit * 2.85, panY, unit * 5.7, Math.max(4, unit * 0.11), unit * 0.05, true, false);
+    }
+    ctx.restore();
+  }
+  // #endregion
+  // #endregion
+
+  // #region Tens and ones activities
+  function startPlaceValueView() {
+    leftBtn.classList.add("hidden");
+    rightBtn.classList.add("hidden");
+    vizTitle.textContent = "Tiotal och ental";
+    actionBtn.textContent = "Slumpa ny uppgift";
+    actionBtn.onclick = generatePlaceValueTask;
+    generatePlaceValueTask();
+  }
+
+  function generatePlaceValueTask() {
+    const taskType = placeValueActivityEl.value;
+    const limit = Number(placeValueRangeEl.value);
+    const number = randInt(0, limit);
+
+    placeValueTask = {
+      type: taskType,
+      number,
+      tens: Math.floor(number / 10),
+      ones: number % 10
+    };
+
+    setFacit(getPlaceValueAnswer());
+    playTaskSound();
+    redraw();
+  }
+
+  function getPlaceValueAnswer() {
+    return `${placeValueTask.number} = ${placeValueTask.tens} tiotal och ${placeValueTask.ones} ental`;
+  }
+
+  // Samma centrerade kolumner används för rubriker, tomma rutor och klossar.
+  function getPlaceValueLayout(w, h, isBuildTask) {
+    const width = Math.min(960, w * 0.92);
+    const gap = Math.min(48, Math.max(12, w * 0.04));
+    const boxWidth = (width - gap) / 2;
+    const leftX = (w - width) / 2;
+    const rightX = leftX + boxWidth + gap;
+    const boxY = h * (isBuildTask ? 0.53 : 0.35);
+    const boxHeight = h * (isBuildTask ? 0.90 : 0.89) - boxY;
+    return { leftX, rightX, boxWidth, boxY, boxHeight,
+      labelY: h * (isBuildTask ? 0.48 : 0.29),
+      tensCenterX: leftX + boxWidth / 2,
+      onesCenterX: rightX + boxWidth / 2,
+      padding: Math.max(6, Math.min(14, boxWidth * 0.04)) };
+  }
+
+  function drawPlaceValue() {
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    const isBuildTask = placeValueTask.type === "build";
+    const title = isBuildTask ? "Bygg talet med tiotal och ental" : "Vilket tal visar klossarna?";
+    const layout = getPlaceValueLayout(w, h, isBuildTask);
+
+    ctx.fillStyle = "#111";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.font = `600 ${Math.max(16, Math.min(38, w * 0.045, h * 0.07))}px system-ui`;
+    ctx.fillText(title, w / 2, h * 0.12, w * 0.92);
+
+    if (isBuildTask) {
+      ctx.font = `700 ${Math.max(38, Math.min(110, w * 0.13, h * 0.18))}px system-ui`;
+      ctx.fillStyle = "#1e4f80";
+      ctx.fillText(String(placeValueTask.number), w / 2, h * 0.28);
+      ctx.fillStyle = "#555";
+      ctx.font = `600 ${Math.max(14, Math.min(28, w * 0.032, h * 0.05))}px system-ui`;
+      ctx.fillText("Hur många tiotal och ental behövs?", w / 2, h * 0.40, w * 0.92);
+      ctx.fillStyle = "#fbfbfc";
+      ctx.strokeStyle = "#9aa0a6";
+      ctx.lineWidth = 2;
+      roundRect(layout.leftX, layout.boxY, layout.boxWidth, layout.boxHeight, 12, true, true);
+      roundRect(layout.rightX, layout.boxY, layout.boxWidth, layout.boxHeight, 12, true, true);
+      if (!showAnswer) {
+        ctx.fillStyle = "#555";
+        ctx.font = `${Math.max(13, Math.min(20, w * 0.022, h * 0.045))}px system-ui`;
+        ctx.fillText("Bygg med egna talformer eller klossar.", w / 2, h * 0.96, w * 0.92);
+      }
+    }
+
+    ctx.fillStyle = "#555";
+    ctx.font = `600 ${Math.max(14, Math.min(25, w * 0.03, h * 0.06))}px system-ui`;
+    ctx.fillText("Tiotal", layout.tensCenterX, layout.labelY);
+    ctx.fillText("Ental", layout.onesCenterX, layout.labelY);
+    if (isBuildTask && !showAnswer) return;
+    if (placeValueShapesEl.value === "numicon") drawPlaceValueNumicon(layout, w, h);
+    else drawPlaceValueBlocks(layout);
+  }
+
+  function drawPlaceValueBlocks(layout) {
+    const width = layout.boxWidth - layout.padding * 2;
+    const height = layout.boxHeight - layout.padding * 2;
+    const count = placeValueTask.tens;
+    const unit = Math.min(24, height / 10, width / Math.max(3.64, count + Math.max(0, count - 1) * 0.35));
+    const rodGap = unit * 0.35;
+    const rodHeight = unit * 10;
+    const rodY = layout.boxY + (layout.boxHeight - rodHeight) / 2;
+    const fullTensWidth = count * unit + Math.max(0, count - 1) * rodGap;
+    const firstRodX = layout.tensCenterX - fullTensWidth / 2;
+    for (let rod = 0; rod < count; rod++) {
+      const x = firstRodX + rod * (unit + rodGap);
+      ctx.fillStyle = "#f4c542";
+      ctx.strokeStyle = "#8a6d16";
+      ctx.lineWidth = 1.5;
+      roundRect(x, rodY, unit, rodHeight, 3, true, true);
+      ctx.strokeStyle = "rgba(80, 60, 10, 0.55)";
+      ctx.lineWidth = 1;
+      for (let part = 1; part < 10; part++) {
+        const y = rodY + part * unit;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + unit, y);
+        ctx.stroke();
+      }
+    }
+
+    const cubeGap = unit * 0.32;
+    const ones = placeValueTask.ones;
+    const columns = Math.min(3, ones);
+    const rows = Math.ceil(ones / 3);
+    const gridWidth = columns * unit + Math.max(0, columns - 1) * cubeGap;
+    const gridHeight = rows * unit + Math.max(0, rows - 1) * cubeGap;
+    const firstCubeX = layout.onesCenterX - gridWidth / 2;
+    const firstCubeY = layout.boxY + (layout.boxHeight - gridHeight) / 2;
+    for (let cube = 0; cube < ones; cube++) {
+      const x = firstCubeX + (cube % 3) * (unit + cubeGap);
+      const y = firstCubeY + Math.floor(cube / 3) * (unit + cubeGap);
+      ctx.fillStyle = "#69b7e8";
+      ctx.strokeStyle = "#245b7a";
+      ctx.lineWidth = 1.5;
+      roundRect(x, y, unit, unit, 3, true, true);
+    }
+  }
+
+  function drawPlaceValueNumicon(layout, w, h) {
+    const top = layout.boxY + layout.padding;
+    const height = layout.boxHeight - layout.padding * 2;
+    const width = layout.boxWidth - layout.padding * 2;
+    const count = placeValueTask.tens;
+    const gap = 0.7;
+    let best = { columns: 1, rows: 1, unit: 0 };
+    for (let columns = 1; columns <= Math.min(5, Math.max(1, count)); columns++) {
+      const rows = Math.max(1, Math.ceil(count / columns));
+      const unit = Math.min(66,
+        width / (columns * 2 + (columns - 1) * gap),
+        height / (rows * 5 + (rows - 1) * gap),
+        width / 2);
+      if (unit > best.unit) best = { columns, rows, unit };
+    }
+    const gridHeight = (best.rows * 5 + (best.rows - 1) * gap) * best.unit;
+    const gridTop = top + (height - gridHeight) / 2;
+    for (let row = 0; row < best.rows; row++) {
+      const rowCount = Math.min(best.columns, count - row * best.columns);
+      const rowWidth = (rowCount * 2 + Math.max(0, rowCount - 1) * gap) * best.unit;
+      const firstX = layout.tensCenterX - rowWidth / 2;
+      for (let column = 0; column < rowCount; column++) {
+        const x = firstX + column * (2 + gap) * best.unit;
+        const y = gridTop + row * (5 + gap) * best.unit;
+        numiconShapes.draw(10, x, y, best.unit);
+      }
+    }
+    numiconShapes.drawCentered(placeValueTask.ones, layout.onesCenterX, top + height / 2, best.unit);
+    ctx.fillStyle = "#777";
+    ctx.font = `${Math.max(18, Math.min(28, w * 0.03, h * 0.055))}px system-ui`;
+    if (count === 0) ctx.fillText("—", layout.tensCenterX, top + height / 2);
+    if (placeValueTask.ones === 0) ctx.fillText("—", layout.onesCenterX, top + height / 2);
+  }
+  // #endregion
+
+  function startNumberLineView() {
+  vizTitle.textContent = "Talrad";
+  actionBtn.textContent = "Slumpa punkt";
+
+  nlValue = randInt(nlMin, nlMax);
+  nlDisplayValue = nlValue;              // ✅ VIKTIGT
+  setFacit(String(nlValue));
+  redraw();
+
+  leftBtn.classList.remove("hidden");
+  rightBtn.classList.remove("hidden");
+
+  leftBtn.onclick = () => moveNumberLine(-1);
+  rightBtn.onclick = () => moveNumberLine(+1);
+
+  actionBtn.onclick = () => {
+    stopAllAnimations();
+    stopNumberlineAnim();
+    nlValue = randInt(nlMin, nlMax);
+    nlDisplayValue = nlValue;            // ✅ bra (du hade den)
+    setFacit(String(nlValue));
+    redraw();
+  };
+}
+
+
+function stopNumberlineAnim() {
+  if (nlAnim) cancelAnimationFrame(nlAnim);
+  nlAnim = null;
+  nlAnimState = null;
+}
+
+function moveNumberLine(step) {
+  // Om animation pågår: utgå från nuvarande "display"-värde
+  const base = (nlAnimState ? nlDisplayValue : nlValue);
+
+  // vi vill flytta exakt ett helt steg i heltal
+  const nextInt = clamp(Math.round(base) + step * nlStepSize, nlMin, nlMax);
+
+  if (nlAnimState && nextInt === nlAnimState.to) return;
+  if (!nlAnimState && nextInt === nlValue) return;
+
+  playJumpSound();
+  animateNumberLineTo(nextInt);
+}
+
+
+function animateNumberLineTo(targetValue) {
+  // Om animation pågår: börja från den position som visas JUST NU
+  let fromValue = nlValue;
+
+  if (nlAnimState) {
+    // beräkna var vi är i den gamla animationen
+    const now = performance.now();
+    const p = clamp((now - nlAnimState.t0) / nlAnimState.duration, 0, 1);
+    const cur = nlAnimState.from + (nlAnimState.to - nlAnimState.from) * p;
+    fromValue = cur;
+  }
+
+  stopAllAnimations();
+  stopNumberlineAnim();
+
+  nlAnimState = {
+    from: fromValue,
+    to: targetValue,
+    t0: performance.now(),
+    duration: 220
+  };
+
+  function frame(t) {
+    const p = clamp((t - nlAnimState.t0) / nlAnimState.duration, 0, 1);
+
+    // smooth
+    const ease = 1 - (1 - p) * (1 - p);
+
+    // uppdatera display value kontinuerligt
+    nlDisplayValue = nlAnimState.from + (nlAnimState.to - nlAnimState.from) * ease;
+
+    redraw({ nlMoveP: ease, nlFrom: nlAnimState.from, nlTo: nlAnimState.to });
+
+    if (p < 1) nlAnim = requestAnimationFrame(frame);
+    else {
+      nlValue = targetValue;
+      nlDisplayValue = nlValue;
+      setFacit(String(nlValue));
+      nlAnim = null;
+      nlAnimState = null;
+      redraw();
+    }
+  }
+  nlAnim = requestAnimationFrame(frame);
+}
+
+
+function numberToX(v, left, right) {
+  const t = (v - nlMin) / (nlMax - nlMin);
+  return left + t * (right - left);
+}
+
+function drawNumberLine(opts = {}) {
+  const w = canvas.width / (window.devicePixelRatio || 1);
+  const h = canvas.height / (window.devicePixelRatio || 1);
+
+  const padX = Math.max(18, w * 0.08);
+  const y = h * 0.55;
+  const left = padX;
+  const right = w - padX;
+
+  // line
+  ctx.strokeStyle = "#111";
+  ctx.lineWidth = Math.max(2, Math.min(4, w / 300));
+  ctx.beginPath();
+  ctx.moveTo(left, y);
+  ctx.lineTo(right, y);
+  ctx.stroke();
+
+  // ticks
+  const tickH = Math.max(10, h * 0.035);
+  ctx.lineWidth = Math.max(2, Math.min(3, w / 400));
+  ctx.font = `${Math.max(12, Math.min(22, w * 0.03))}px system-ui`;
+  ctx.textAlign = "center";
+  ctx.textBaseline = "top";
+
+  for (let v = nlMin; v <= nlMax; v++) {
+    const x = numberToX(v, left, right);
+
+    // längre streck vid 0 och 5-steg, annars kortare
+    const isMajor = (v === 0) || (v % 5 === 0);
+    const hh = isMajor ? tickH : tickH * 0.65;
+
+    ctx.strokeStyle = "#111";
+    ctx.beginPath();
+    ctx.moveTo(x, y - hh);
+    ctx.lineTo(x, y + hh);
+    ctx.stroke();
+
+    // labels (alla heltal om intervallet är <= 25, annars glesa)
+    const span = nlMax - nlMin;
+    const showLabel = (span <= 25) ? true : isMajor;
+    if (showLabel) {
+      ctx.fillStyle = "#111";
+      ctx.fillText(String(v), x, y + hh + 6);
+    }
+  }
+
+  // Dot position + parabol-hopp vid rörelse
+  const baseVal = (opts.nlMoveP != null ? nlDisplayValue : nlValue);
+  let x = numberToX(baseVal, left, right);
+  let yOff = 0;
+
+  if (opts.nlMoveP != null) {
+    const p = opts.nlMoveP;
+    const jump = 4 * p * (1 - p);
+    const amp = Math.max(18, h * 0.10);
+    yOff = -amp * jump;
+  }
+
+
+    // figure (ball or rabbit)
+  if (nlFigure === "rabbit" && rabbitImg.complete && rabbitImg.naturalWidth > 0) {
+    const size = Math.max(28, Math.min(64, w * 0.06)); // kaninens storlek i px
+    ctx.drawImage(rabbitImg, x - size/2, (y + yOff) - size, size, size);
+  } else {
+    const r = Math.max(6, Math.min(14.4, w * 0.016));
+    ctx.fillStyle = "#1e88e5";
+    ctx.beginPath();
+    ctx.arc(x, y + yOff, r, 0, Math.PI * 2);
+    ctx.fill();
+  }
+}
+
+  // ---------- Rendering ----------
+  function redraw(opts = {}) {
+    const w = canvas.width / (window.devicePixelRatio || 1);
+    const h = canvas.height / (window.devicePixelRatio || 1);
+    const hasBalance = mode === "tenframe" && tenFrameGroupingEl.value === "numicon";
+    guessControl.classList.toggle("hidden", !hasBalance);
+    balanceStatus.classList.toggle("hidden", !hasBalance);
+    ctx.clearRect(0,0,w,h);
+
+    if (mode === "dice") {
+      const L = layoutDice();
+      const n = diceN;
+      const cols = L.cols;
+
+      const fullRows = Math.floor(n / cols);
+      const lastCount = n % cols;
+
+      const jitterScale = (opts.diceJitter ?? 0);
+      const bounceScale = (opts.diceBounce ?? 0);
+
+      for (let i=0; i<n; i++) {
+        const row = Math.floor(i/cols);
+        const col = i % cols;
+
+        let rowBaseX = L.baseX;
+        if (lastCount !== 0 && row === fullRows) {
+          const lastW = lastCount * L.dieSize + (lastCount - 1) * L.gap;
+          rowBaseX = (L.w - lastW)/2;
+        }
+
+        const x = rowBaseX + col*(L.dieSize + L.gap);
+        const y = L.baseY + row*(L.dieSize + L.gap);
+        drawDie(x, y, L.dieSize, diceValues[i] ?? 1, jitterScale, bounceScale);
+      }
+    } else if (mode === "clock") {
+      drawClock();
+    } else if (mode === "tenframe") {
+      drawTenFrame();
+    } else if (mode === "placevalue") {
+      drawPlaceValue();
+    } else {
+      drawNumberLine(opts);
+    }
+  }
+
+  function stopAllAnimations() {
+    if (diceAnim) cancelAnimationFrame(diceAnim);
+    if (clockAnim) cancelAnimationFrame(clockAnim);
+    diceAnim = null;
+    clockAnim = null;
+  }
+
+  function randInt(a,b){ return Math.floor(Math.random()*(b-a+1))+a; }
+
+  function roundRect(x, y, w, h, r, fill, stroke) {
+    r = Math.min(r, w/2, h/2);
+    ctx.beginPath();
+    ctx.moveTo(x+r, y);
+    ctx.arcTo(x+w, y, x+w, y+h, r);
+    ctx.arcTo(x+w, y+h, x, y+h, r);
+    ctx.arcTo(x, y+h, x, y, r);
+    ctx.arcTo(x, y, x+w, y, r);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+  }
+
+})();
+</script>
+</body>
+</html>
