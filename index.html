@@ -1520,24 +1520,32 @@ function numberToX(v, left, right) {
     const w = canvas.width / (window.devicePixelRatio || 1);
     const h = canvas.height / (window.devicePixelRatio || 1);
     const padX = Math.max(18, w * 0.08);
-    const tickH = Math.max(10, h * 0.035);
+    const spacing = (w - padX * 2) / (nlMax - nlMin);
+    const tickH = Math.max(9, Math.min(20, h * 0.032, spacing * 1.8));
+    const dotRadius = Math.max(3, Math.min(11, w * 0.016, spacing * 0.55));
     const fontSize = Math.max(12, Math.min(22, w * 0.03));
     const compact = h < 340;
     const controlHeight = compact ? 30 : 57;
     const y = Math.min(h * 0.55, h - controlHeight - 32 - tickH - fontSize - 18);
-    return { w, h, left: padX, right: w - padX, y, tickH, fontSize, compact };
+    return { w, h, left: padX, right: w - padX, y, spacing, tickH, dotRadius, fontSize, compact };
   }
 
   function drawNumberLineAxis(layout) {
-    const { w, left, right, y, tickH, fontSize } = layout;
-    ctx.strokeStyle = "#111";
-    ctx.lineWidth = Math.max(2, Math.min(4, w / 300));
+    const { w, left, right, y, spacing, tickH, fontSize } = layout;
+    ctx.strokeStyle = "#333";
+    ctx.lineWidth = Math.max(1.2, Math.min(2, w / 700));
     ctx.beginPath();
     ctx.moveTo(left, y);
     ctx.lineTo(right, y);
     ctx.stroke();
 
-    ctx.lineWidth = Math.max(2, Math.min(3, w / 400));
+    // Som på en linjal: korta ental, mellanstora femtal och långa tiotal.
+    // Bredden följer avståndet mellan talen, så täta talrader får finare streck.
+    const ticks = {
+      unit: { height: Math.max(2, tickH * 0.26), width: clamp(spacing * 0.1, 0.6, 1), color: "#777" },
+      five: { height: tickH * 0.6, width: clamp(spacing * 0.15, 1, 1.7), color: "#444" },
+      ten: { height: tickH, width: clamp(spacing * 0.2, 1.3, 2.2), color: "#111" }
+    };
     ctx.font = `${fontSize}px system-ui`;
     ctx.textAlign = "center";
     ctx.textBaseline = "top";
@@ -1545,14 +1553,16 @@ function numberToX(v, left, right) {
     for (let value = nlMin; value <= nlMax; value++) {
       const x = numberToX(value, left, right);
       const isMajor = value % 10 === 0;
-      const tickHeight = isMajor ? tickH : tickH * 0.65;
+      const tick = isMajor ? ticks.ten : value % 5 === 0 ? ticks.five : ticks.unit;
+      ctx.strokeStyle = tick.color;
+      ctx.lineWidth = tick.width;
       ctx.beginPath();
-      ctx.moveTo(x, y - tickHeight);
-      ctx.lineTo(x, y + tickHeight);
+      ctx.moveTo(x, y - tick.height);
+      ctx.lineTo(x, y + tick.height);
       ctx.stroke();
       if (showAllLabels || isMajor) {
         ctx.fillStyle = "#111";
-        ctx.fillText(String(value), x, y + tickHeight + 6);
+        ctx.fillText(String(value), x, y + tickH + 6);
       }
     }
   }
@@ -1568,7 +1578,7 @@ function numberToX(v, left, right) {
     ctx.fillText("Vilket tal ligger den blå punkten på?", w / 2, h * 0.16, w * 0.9);
 
     // Båda punkterna ligger på linjen. Bara en rätt gissning gör dem gröna.
-    const radius = Math.max(6, Math.min(14.4, w * 0.016));
+    const radius = layout.dotRadius;
     const hasWrongGuess = !showAnswer && nlGuess.value !== null && !isCorrect;
     const targetX = numberToX(nlValue, left, right);
     const guessX = hasWrongGuess ? numberToX(nlGuess.value, left, right) : targetX;
@@ -1638,7 +1648,7 @@ function numberToX(v, left, right) {
       const size = Math.max(28, Math.min(64, w * 0.06));
       ctx.drawImage(rabbitImg, x - size / 2, y + yOff - size, size, size);
     } else {
-      const radius = Math.max(6, Math.min(14.4, w * 0.016));
+      const radius = layout.dotRadius;
       ctx.fillStyle = "#1e88e5";
       ctx.beginPath();
       ctx.arc(x, y + yOff, radius, 0, Math.PI * 2);
