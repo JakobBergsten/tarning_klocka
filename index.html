@@ -66,6 +66,89 @@
     .waitStatus { position: absolute; bottom: 100px; left: 16px; right: 16px; margin: 0; color: #1c2c44; text-align: center; font-size: 14px; }
     .visuallyHidden { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
     /* #endregion */
+
+/* #region Mattedragkamp */
+.tugCard { color: #203650; padding: clamp(16px, 3vw, 32px); }
+.tugHeader { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+.tugHeader h1 { font-size: clamp(24px, 3vw, 36px); margin: 0; letter-spacing: -.03em; }
+.tugEyebrow, .tugLabel { font-size: 11px; letter-spacing: .14em; font-weight: 750; color: #65768a; margin: 0 0 5px; }
+.tugLabel { display: block; }
+.tugIntro { text-align: center; margin: 30px 0; }
+.tugIntro h2 { font-size: clamp(32px, 5vw, 52px); margin: 12px 0 8px; letter-spacing: -.04em; }
+.tugIntro p { color: #65768a; }
+.tugIntroLine { display: inline-block; width: 120px; height: 7px; border-radius: 8px; background: linear-gradient(90deg, #3984ce 50%, #ef9b42 50%); }
+.tugSetupGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.tugSetupBox { border: 1px solid #dce4ec; background: #f8fafc; border-radius: 18px; padding: 24px; display: flex; flex-direction: column; gap: 10px; }
+.tugSetupBox h2 { margin: 0; font-size: 23px; }
+.tugSetupBox p { margin: 0 0 10px; color: #65768a; line-height: 1.5; }
+.tugSetupBox label { font-weight: 650; display: block; margin-bottom: 5px; }
+.tugSetupBox input, .tugSetupBox select { box-sizing: border-box; width: 100%; min-height: 46px; font-size: 16px; border: 1px solid #cbd6e1; border-radius: 10px; padding: 10px; background: white; }
+.tugSetupBox > button { margin-top: 12px; min-height: 50px; background: #244d77; font-weight: 650; }
+.tugTwoFields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.tugMenuStatus { min-height: 22px; text-align: center; margin: 18px 0 0; color: #9a313d; }
+#tugRestoreBtn { display: block; margin: 20px auto 0; }
+.tugNotice { border-radius: 10px; background: #fff3d8; color: #76541b; padding: 12px 16px; line-height: 1.4; }
+.tugHostBar { display: grid; grid-template-columns: 1fr auto 1fr; gap: 20px; align-items: center; margin: 20px 0; }
+.tugRoomCode { font-size: clamp(30px, 5vw, 52px); letter-spacing: .1em; font-variant-numeric: tabular-nums; }
+.tugTimerBox { text-align: center; }
+.tugTimer { font-size: clamp(36px, 5vw, 60px); letter-spacing: -.04em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.tugShare { justify-self: end; display: flex; align-items: center; flex-direction: column; gap: 8px; }
+.tugShare a { color: #426588; font-size: 13px; }
+.tugScores { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px; }
+.tugScore { border-radius: 14px; padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: clamp(18px, 2.3vw, 28px); font-weight: 650; overflow-wrap: anywhere; }
+.tugScore strong { font-size: clamp(30px, 4vw, 46px); font-variant-numeric: tabular-nums; }
+.tugBlue { background: #e7f0fb; color: #225c97; }
+.tugOrange { background: #fff0dd; color: #925018; }
+.tugScene { position: relative; }
+.tugScene svg { width: 100%; height: auto; display: block; }
+#tugRopeGroup { transition: transform .55s cubic-bezier(.2,.85,.3,1); }
+.tugBoardOverlay { position: absolute; inset: 5% 8% auto; text-align: center; display: flex; flex-direction: column; gap: 6px; pointer-events: none; }
+.tugBoardOverlay strong { font-size: clamp(18px, 4vw, 40px); letter-spacing: -.03em; }
+.tugBoardOverlay span { color: #617389; font-size: clamp(12px, 1.7vw, 18px); }
+.tugBoardOverlay.finished { background: rgba(255,255,255,.96); border-radius: 16px; padding: 18px 10px; box-shadow: 0 5px 24px #20365015; }
+.tugHostActions { display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; margin-top: 20px; }
+.tugHostActions p { color: #617389; }
+#tugStartBtn { background: #244d77; min-width: 170px; font-weight: 650; }
+.tugPlayer { max-width: 630px; margin: 0 auto; }
+.tugPlayerBar { display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+.tugMyName { font-size: clamp(20px, 3vw, 30px); font-weight: 750; overflow-wrap: anywhere; }
+.tugPlayerTimer { background: #eef2f6; padding: 8px 14px; border-radius: 10px; font-size: 24px; font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.tugQuestionBox { text-align: center; margin: clamp(15px, 3vh, 30px) 0 16px; }
+.tugQuestionBox p { color: #65768a; margin: 0 0 12px; }
+.tugQuestionBox h2 { margin: 0; font-size: clamp(32px, 6.5vw, 65px); letter-spacing: -.035em; line-height: 1.2; }
+.tugAnswerInput { display: block; width: 100%; box-sizing: border-box; height: 65px; text-align: center; font-size: 34px; font-weight: 700; color: #203650; border: 2px solid #a6b9cc; border-radius: 14px; background: #f7fafc; margin: 16px 0 12px; }
+.tugKeypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.tugKeypad button { min-height: clamp(48px, 7vh, 72px); border-radius: 13px; background: #edf2f7; color: #203650; font-size: 29px; font-weight: 650; touch-action: manipulation; }
+.tugKeypad button:active { background: #d8e5f2; }
+.tugKeypad #tugEraseBtn { font-size: 17px; }
+.tugKeypad .tugAnswerBtn { font-size: 20px; background: #244d77; color: white; }
+.tugFeedback { margin: 15px 0 0; min-height: 24px; text-align: center; font-size: 18px; font-weight: 650; }
+.tugPlayerResult { text-align: center; font-size: 28px; font-weight: 750; padding: 20px; border-radius: 14px; background: #eef5f0; }
+.tugCard:fullscreen { box-sizing: border-box; width: 100%; height: 100%; overflow: auto; border-radius: 0; background: white; }
+.tugCard:fullscreen #tugHost { max-width: 1250px; margin: 0 auto; }
+.tugCard button:focus-visible, .tugCard input:focus-visible, .tugCard select:focus-visible { outline: 3px solid #438dcc; outline-offset: 3px; }
+@media (max-width: 640px) {
+  .tugSetupGrid { grid-template-columns: 1fr; }
+  .tugSetupBox { padding: 18px; }
+  .tugHeader { gap: 10px; margin-bottom: 16px; }
+  .tugHeader .row { gap: 6px; }
+  .tugHeader button { padding: 8px 10px; font-size: 12px; }
+  .tugHostBar { gap: 10px; }
+  .tugShare button { font-size: 11px; padding: 8px; }
+  .tugShare a { font-size: 11px; }
+  .tugScores { gap: 8px; }
+  .tugScore { padding: 10px; }
+}
+@media (max-height: 650px) and (min-width: 700px) {
+  .tugPlayer { max-width: 920px; display: grid; grid-template-columns: 1fr 1fr; column-gap: 32px; }
+  .tugPlayerBar { grid-column: 1 / -1; }
+  .tugQuestionBox { align-self: center; margin: 24px 0; }
+  #tugAnswerPanel { grid-column: 2; grid-row: 2 / 4; }
+  .tugFeedback { grid-column: 1; }
+  .tugPlayerResult { grid-column: 1 / -1; }
+}
+@media (prefers-reduced-motion: reduce) { #tugRopeGroup { transition: none; } }
+/* #endregion */
   </style>
 </head>
 <body>
@@ -176,6 +259,7 @@
       <div class="row">
         <button id="openBtn">Öppna</button>
         <button class="secondary" id="waitScreenBtn" type="button">Visa matteväntskärm</button>
+        <button class="secondary" id="tugOpenBtn" type="button">Mattedragkamp</button>
       </div>
 
       <div class="hint">Tips: På mobilen kan du rotera skärmen. Du kan också använda helskärmsknappen i visualiseringen.</div>
@@ -215,6 +299,76 @@
       </div>
       </div>
     </div>
+<!-- #region Mattespel: dragkamp -->
+<section id="tugCard" class="card tugCard hidden" aria-labelledby="tugTitle">
+  <div class="tugHeader">
+    <div><p class="tugEyebrow">MATTEVERKTYG</p><h1 id="tugTitle">Mattedragkamp</h1></div>
+    <div class="row"><button id="tugFullscreenBtn" class="secondary" type="button">Helskärm</button><button id="tugBackBtn" class="secondary" type="button">Till startsidan</button></div>
+  </div>
+  <p id="tugNotice" class="tugNotice hidden" role="status"></p>
+
+  <div id="tugMenu" class="tugMenu">
+    <div class="tugIntro"><span class="tugIntroLine"></span><h2>Två lag. Ett rep.</h2><p>Räkna, svara och dra ditt lag mot seger.</p></div>
+    <div class="tugSetupGrid">
+      <div class="tugSetupBox">
+        <h2>Visa på tavlan</h2><p>Skapa ett spelrum. Lagen ansluter från varsin iPad.</p>
+        <label for="tugKind">Räknesätt</label>
+        <select id="tugKind"><option value="mixed">Addition och subtraktion</option><option value="add">Addition</option><option value="subtract">Subtraktion</option></select>
+        <div class="tugTwoFields"><div><label for="tugLimit">Talområde</label><select id="tugLimit"><option value="10">0–10</option><option value="20" selected>0–20</option><option value="100">0–100</option></select></div><div><label for="tugSeconds">Speltid</label><select id="tugSeconds"><option value="30">30 sekunder</option><option value="60" selected>1 minut</option><option value="90">1½ minut</option><option value="120">2 minuter</option><option value="180">3 minuter</option></select></div></div>
+        <button id="tugCreateBtn" type="button">Skapa dragkamp</button>
+      </div>
+      <form id="tugJoinForm" class="tugSetupBox">
+        <h2>Spela på iPad</h2><p>Ange koden som visas på tavlan och välj ditt lag.</p>
+        <label for="tugCodeInput">Spelkod</label><input id="tugCodeInput" type="text" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" required autocomplete="off" placeholder="123456" />
+        <div class="tugTwoFields"><div><label for="tugSide">Lag</label><select id="tugSide"><option value="left">Blått lag · vänster</option><option value="right">Orange lag · höger</option></select></div><div><label for="tugNameInput">Lagnamn</label><input id="tugNameInput" type="text" maxlength="24" required autocomplete="off" placeholder="Vårt lagnamn" /></div></div>
+        <button id="tugJoinBtn" type="submit">Gå med</button>
+      </form>
+    </div>
+    <button id="tugRestoreBtn" class="secondary hidden" type="button">Återanslut till förra spelrummet</button>
+    <p id="tugMenuStatus" class="tugMenuStatus" role="status" aria-live="polite"></p>
+  </div>
+
+  <div id="tugHost" class="hidden">
+    <div class="tugHostBar"><div><span class="tugLabel">SPELKOD</span><strong id="tugRoomCode" class="tugRoomCode">—</strong></div><div class="tugTimerBox"><span id="tugTimerLabel" class="tugLabel">SPELTID</span><strong id="tugHostTimer" class="tugTimer">1:00</strong></div><div class="tugShare"><button id="tugCopyBtn" class="secondary" type="button">Kopiera spelarlänk</button><a id="tugPlayerLink" target="_blank" rel="noopener">Öppna spelarvyn</a></div></div>
+    <div class="tugScores"><div class="tugScore tugBlue"><span id="tugLeftName">Väntar på blått lag</span><strong id="tugLeftScore">0</strong></div><div class="tugScore tugOrange"><span id="tugRightName">Väntar på orange lag</span><strong id="tugRightScore">0</strong></div></div>
+    <div class="tugScene">
+      <svg viewBox="0 0 1000 350" role="img" aria-label="Dragkamp. Repet flyttas mot laget som har flest rätta svar.">
+        <defs><linearGradient id="tugSky" x2="0" y2="1"><stop stop-color="#e7f0fc"/><stop offset="1" stop-color="#fafcff"/></linearGradient><pattern id="tugRopePattern" width="18" height="12" patternUnits="userSpaceOnUse"><rect width="18" height="12" fill="#b88749"/><path d="M-3 12L9 0M9 12L21 0" stroke="#e6c68e" stroke-width="5"/></pattern><filter id="tugShadow"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#223a55" flood-opacity=".14"/></filter></defs>
+        <rect width="1000" height="350" rx="24" fill="url(#tugSky)"/>
+        <ellipse cx="500" cy="314" rx="430" ry="20" fill="#dce7f1"/>
+        <path d="M500 50V320" stroke="#b0c0d2" stroke-width="3" stroke-dasharray="8 8"/>
+        <path d="M330 294V320M670 294V320" stroke="#b0c0d2" stroke-width="3"/>
+        <g id="tugRopeGroup" filter="url(#tugShadow)">
+          <path d="M172 178H828" stroke="#795832" stroke-width="16" stroke-linecap="round"/>
+          <path d="M172 178H828" stroke="url(#tugRopePattern)" stroke-width="12" stroke-linecap="round"/>
+          <path d="M500 174V226L537 211L500 196" fill="#e85960" stroke="#b53544" stroke-width="2" stroke-linejoin="round"/>
+          <g fill="#3984ce" stroke="#254866" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M206 199L178 260L145 302M178 260L224 302" fill="none"/><path d="M224 164L206 211L234 220L250 180"/><path d="M218 180L268 176" fill="none"/><circle cx="230" cy="132" r="23" fill="#ffd2ad"/><path d="M213 121Q234 104 250 128" stroke="#705444" fill="none"/>
+            <path d="M292 205L266 261L236 302M266 261L310 302" fill="none"/><path d="M308 169L291 216L319 222L334 181"/><path d="M303 184L348 178" fill="none"/><circle cx="315" cy="137" r="23" fill="#f1ba91"/><path d="M296 127Q317 109 336 128" stroke="#403a3d" fill="none"/>
+          </g>
+          <g transform="translate(1000 0) scale(-1 1)" fill="#ef9b42" stroke="#775035" stroke-width="7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M206 199L178 260L145 302M178 260L224 302" fill="none"/><path d="M224 164L206 211L234 220L250 180"/><path d="M218 180L268 176" fill="none"/><circle cx="230" cy="132" r="23" fill="#f1ba91"/><path d="M213 121Q234 104 250 128" stroke="#403a3d" fill="none"/>
+            <path d="M292 205L266 261L236 302M266 261L310 302" fill="none"/><path d="M308 169L291 216L319 222L334 181"/><path d="M303 184L348 178" fill="none"/><circle cx="315" cy="137" r="23" fill="#ffd2ad"/><path d="M296 127Q317 109 336 128" stroke="#705444" fill="none"/>
+          </g>
+        </g>
+      </svg>
+      <div id="tugBoardOverlay" class="tugBoardOverlay" aria-live="polite"><strong id="tugBoardMessage">Lagen ansluter</strong><span id="tugBoardDetail">Öppna samma hemsida på båda iPads.</span></div>
+    </div>
+    <div class="tugHostActions"><p id="tugHostStatus" role="status"></p><div class="row"><button id="tugStartBtn" type="button">Starta matchen</button><button id="tugStopBtn" class="secondary hidden" type="button">Avsluta matchen</button></div></div>
+  </div>
+
+  <div id="tugPlayer" class="tugPlayer hidden">
+    <div class="tugPlayerBar"><span id="tugMyName" class="tugMyName">Mitt lag</span><span id="tugPlayerTimer" class="tugPlayerTimer">Väntar</span></div>
+    <div class="tugQuestionBox"><p id="tugPlayerPrompt">Vänta på att läraren startar matchen.</p><h2 id="tugQuestion">Gör er redo!</h2></div>
+    <div id="tugAnswerPanel">
+      <label class="visuallyHidden" for="tugAnswerInput">Ditt svar</label><input id="tugAnswerInput" class="tugAnswerInput" type="text" inputmode="none" readonly aria-describedby="tugFeedback" placeholder="Svar" />
+      <div id="tugKeypad" class="tugKeypad"><button type="button" data-digit="1">1</button><button type="button" data-digit="2">2</button><button type="button" data-digit="3">3</button><button type="button" data-digit="4">4</button><button type="button" data-digit="5">5</button><button type="button" data-digit="6">6</button><button type="button" data-digit="7">7</button><button type="button" data-digit="8">8</button><button type="button" data-digit="9">9</button><button id="tugEraseBtn" class="secondary" type="button" aria-label="Radera sista siffran">Radera</button><button type="button" data-digit="0">0</button><button id="tugAnswerBtn" class="tugAnswerBtn" type="button">Svara</button></div>
+    </div>
+    <p id="tugFeedback" class="tugFeedback" role="status" aria-live="polite"></p>
+    <p id="tugPlayerResult" class="tugPlayerResult hidden"></p>
+  </div>
+</section>
+<!-- #endregion -->
   </div>
 
 <!-- #region Waiting screen -->
@@ -1943,6 +2097,722 @@ function numberToX(v, left, right) {
   new WaitScreen();
 })();
 // #endregion
+</script>
+
+<script>
+// #region Dragkamp: frågor, poäng och Firebase
+(() => {
+  "use strict";
+
+  const CONFIG = {
+    apiKey: "AIzaSyAZqC-4vIQeCPVOTwfSYExDNsW7wvn2YQ0",
+    authDomain: "matteverktyg.firebaseapp.com",
+    databaseURL: "https://matteverktyg-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "matteverktyg",
+    storageBucket: "matteverktyg.firebasestorage.app",
+    messagingSenderId: "961924076605",
+    appId: "1:961924076605:web:2111c84d01b5b1861ec654"
+  };
+  const SIDES = ["left", "right"];
+  const ROOM_PATH = "mathTug/rooms";
+  const SDK_URL = "https://www.gstatic.com/firebasejs/12.19.0/";
+
+  // #region Ren spellogik: kan kontrolleras utan nätverk
+  class TugMath {
+    static settings(kind, limit, seconds) {
+      if (!["add", "subtract", "mixed"].includes(kind)
+          || ![10, 20, 100].includes(limit) || ![30, 60, 90, 120, 180].includes(seconds)) {
+        throw new Error("Välj räknesätt, talområde och speltid.");
+      }
+      return { kind, limit, seconds };
+    }
+
+    static question(settings, round, side, index, random = Math.random) {
+      const integer = max => Math.floor(random() * (max + 1));
+      const subtract = settings.kind === "subtract" || (settings.kind === "mixed" && random() < 0.5);
+      const whole = 1 + integer(settings.limit - 1);
+      const part = integer(whole);
+      return {
+        id: `${round}-${side}-${index}`, index,
+        a: subtract ? whole : part,
+        b: subtract ? part : whole - part,
+        op: subtract ? "-" : "+",
+        answer: subtract ? whole - part : whole
+      };
+    }
+
+    static text(question) {
+      return `${question.a} ${question.op === "-" ? "−" : "+"} ${question.b} = ?`;
+    }
+  }
+
+  class TugGame {
+    static lobby(round = 0) {
+      return { phase: "lobby", round, startedAt: 0, endsAt: 0, scores: { left: 0, right: 0 } };
+    }
+
+    static start(settings, round, now, random = Math.random) {
+      const startedAt = now + 3000;
+      return {
+        phase: "playing", round, startedAt, endsAt: startedAt + settings.seconds * 1000,
+        scores: { left: 0, right: 0 },
+        questions: Object.fromEntries(SIDES.map(side => [side, TugMath.question(settings, round, side, 0, random)]))
+      };
+    }
+
+    static grade(game, settings, teams, side, submission, random = Math.random) {
+      const question = game?.questions?.[side];
+      if (game?.phase !== "playing" || !question || !submission
+          || submission.uid !== teams?.[side]?.uid || submission.round !== game.round
+          || submission.questionId !== question.id || game.acks?.[side]?.id === submission.id
+          || !Number.isInteger(submission.value) || !Number.isFinite(submission.sentAt)
+          || submission.sentAt < game.startedAt || submission.sentAt > game.endsAt) return null;
+      const next = JSON.parse(JSON.stringify(game));
+      const correct = submission.value === question.answer;
+      next.acks ??= {};
+      next.acks[side] = { id: submission.id, correct, questionId: question.id };
+      if (correct) {
+        next.scores[side] += 1;
+        next.questions[side] = TugMath.question(settings, game.round, side, question.index + 1, random);
+      }
+      return next;
+    }
+
+    static winner(scores) {
+      return scores.left === scores.right ? "draw" : scores.left > scores.right ? "left" : "right";
+    }
+
+    static pull(scores) {
+      // Ett rätt svar syns direkt, medan repet hålls inom tavlans kanter.
+      return -120 * Math.tanh((scores.left - scores.right) / 5);
+    }
+  }
+  // #endregion
+
+  // #region Anslutning och meddelanden mellan de tre enheterna
+  class FirebaseGame {
+    constructor(onConnection) {
+      this.onConnection = onConnection;
+      this.connected = false;
+      this.offset = 0;
+      this.code = null;
+      this.room = null;
+      this.role = null;
+      this.unwatch = null;
+      this.presence = null;
+      this.initializing = null;
+    }
+
+    now() { return Date.now() + this.offset; }
+    roomRef(child = "") { return this.api.ref(this.db, `${ROOM_PATH}/${this.code}${child ? "/" + child : ""}`); }
+
+    static async timeout(promise, message, milliseconds = 15000) {
+      let timer;
+      try {
+        return await Promise.race([promise, new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error(message)), milliseconds);
+        })]);
+      } finally { clearTimeout(timer); }
+    }
+
+    async connect() {
+      if (this.initializing) return this.initializing;
+      this.initializing = this.initialize().catch(error => { this.initializing = null; throw error; });
+      return this.initializing;
+    }
+
+    async initialize() {
+      const [appSdk, authSdk, databaseSdk] = await FirebaseGame.timeout(Promise.all([
+        import(SDK_URL + "firebase-app.js"),
+        import(SDK_URL + "firebase-auth.js"),
+        import(SDK_URL + "firebase-database.js")
+      ]), "Kunde inte ansluta. Kontrollera internet och försök igen.");
+      this.api = databaseSdk;
+      this.app = appSdk.getApps().find(app => app.name === "matte-dragkamp")
+        || appSdk.initializeApp(CONFIG, "matte-dragkamp");
+      this.auth = authSdk.getAuth(this.app);
+      try { await authSdk.setPersistence(this.auth, authSdk.browserLocalPersistence); }
+      catch { await authSdk.setPersistence(this.auth, authSdk.inMemoryPersistence); }
+      const user = this.auth.currentUser || (await FirebaseGame.timeout(authSdk.signInAnonymously(this.auth),
+        "Inloggningen tog för lång tid. Kontrollera internet och försök igen.")).user;
+      this.uid = user.uid;
+      this.db = databaseSdk.getDatabase(this.app);
+      if (!this.connectionUnwatch) {
+        this.connectionUnwatch = databaseSdk.onValue(databaseSdk.ref(this.db, ".info/connected"), snapshot => {
+          this.connected = snapshot.val() === true;
+          this.onConnection(this.connected);
+          if (this.connected && this.role === "host" && this.code) this.markHostOnline().catch(() => {});
+        });
+        this.clockUnwatch = databaseSdk.onValue(databaseSdk.ref(this.db, ".info/serverTimeOffset"), snapshot => {
+          this.offset = snapshot.val() || 0;
+        });
+      }
+      await FirebaseGame.timeout(new Promise(resolve => {
+        const unwatch = databaseSdk.onValue(databaseSdk.ref(this.db, ".info/connected"), snapshot => {
+          if (snapshot.val() === true) { unwatch(); resolve(); }
+        });
+        setTimeout(unwatch, 15000);
+      }), "Ingen kontakt med spelet. Kontrollera internet och försök igen.");
+      const clock = await databaseSdk.get(databaseSdk.ref(this.db, ".info/serverTimeOffset"));
+      this.offset = clock.val() || 0;
+    }
+
+    requireConnection() {
+      if (!this.connected) throw new Error("Anslutningen är bruten. Vänta tills den är tillbaka.");
+    }
+
+    async create(settings) {
+      await this.connect();
+      this.requireConnection();
+      for (let attempt = 0; attempt < 8; attempt++) {
+        const bytes = new Uint32Array(1);
+        crypto.getRandomValues(bytes);
+        const code = String(100000 + bytes[0] % 900000);
+        const result = await this.api.runTransaction(this.api.ref(this.db, `${ROOM_PATH}/${code}`), current => {
+          if (current) return;
+          return {
+            ownerUid: this.uid, createdAt: this.api.serverTimestamp(), expiresAt: this.now() + 6 * 60 * 60 * 1000,
+            settings, game: TugGame.lobby(), hostOnline: true
+          };
+        }, { applyLocally: false });
+        if (result.committed) {
+          this.code = code;
+          this.role = "host";
+          await this.markHostOnline();
+          return result.snapshot.val();
+        }
+      }
+      throw new Error("Kunde inte skapa en spelkod. Försök igen.");
+    }
+
+    async join(code, side, name) {
+      await this.connect();
+      this.requireConnection();
+      if (!/^\d{6}$/.test(code) || !SIDES.includes(side) || name.trim().length < 1 || name.trim().length > 24) {
+        throw new Error("Skriv sex siffror, välj lag och ange ett lagnamn.");
+      }
+      const roomRef = this.api.ref(this.db, `${ROOM_PATH}/${code}`);
+      const room = (await this.api.get(roomRef)).val();
+      if (!room || room.expiresAt <= this.now()) throw new Error("Spelkoden finns inte eller har gått ut.");
+      if (room.ownerUid === this.uid) throw new Error("Anslut laget från en annan enhet än tavlan.");
+      const ownSide = SIDES.find(side => room.teams?.[side]?.uid === this.uid);
+      if (ownSide && ownSide !== side) throw new Error("Den här enheten är redan med i det andra laget.");
+      if (room.teams?.[side]?.uid === this.uid) {
+        this.code = code; this.role = side;
+        return room;
+      }
+      if (room.game.phase !== "lobby") throw new Error("Matchen har redan startat. Be läraren skapa ett nytt spelrum.");
+      const result = await this.api.runTransaction(this.api.ref(this.db, `${ROOM_PATH}/${code}/teams/${side}`), current => {
+        if (current && current.uid !== this.uid) return;
+        return { uid: this.uid, name: name.trim(), joinedAt: current?.joinedAt || this.api.serverTimestamp() };
+      }, { applyLocally: false });
+      if (!result.committed) throw new Error("Det laget är upptaget. Välj det andra laget.");
+      this.code = code; this.role = side;
+      return (await this.api.get(roomRef)).val();
+    }
+
+    async restore(session) {
+      await this.connect();
+      this.requireConnection();
+      if (!/^\d{6}$/.test(session.code) || !["host", ...SIDES].includes(session.role)) throw new Error("Spelrummet saknas.");
+      const room = (await this.api.get(this.api.ref(this.db, `${ROOM_PATH}/${session.code}`))).val();
+      if (!room || room.expiresAt <= this.now()) throw new Error("Spelrummet har stängts eller gått ut.");
+      const ownsRole = session.role === "host" ? room.ownerUid === this.uid : room.teams?.[session.role]?.uid === this.uid;
+      if (!ownsRole) throw new Error("Anslut till spelet med spelkoden igen.");
+      this.code = session.code; this.role = session.role;
+      if (this.role === "host") await this.markHostOnline();
+      return room;
+    }
+
+    watch(onRoom, onError) {
+      this.unwatch?.();
+      this.unwatch = this.api.onValue(this.roomRef(), snapshot => {
+        this.room = snapshot.val();
+        onRoom(this.room);
+      }, onError);
+    }
+
+    async markHostOnline() {
+      if (this.role !== "host" || !this.code || !this.connected) return;
+      const code = this.code;
+      const presence = this.api.onDisconnect(this.roomRef("hostOnline"));
+      await presence.set(false);
+      if (code !== this.code || this.role !== "host") { await presence.cancel(); return; }
+      this.presence = presence;
+      await this.api.set(this.roomRef("hostOnline"), true);
+    }
+
+    async start() {
+      this.requireConnection();
+      if (this.room?.expiresAt <= this.now()) throw new Error("Spelrummet har gått ut. Skapa ett nytt spelrum.");
+      if (!this.room?.teams?.left || !this.room?.teams?.right) throw new Error("Båda lagen behöver ansluta först.");
+      const settings = this.room.settings;
+      const result = await this.api.runTransaction(this.roomRef("game"), game => {
+        if (!game || game.phase === "playing") return;
+        return TugGame.start(settings, game.round + 1, this.now());
+      }, { applyLocally: false });
+      if (!result.committed) throw new Error("Matchen har redan startat.");
+    }
+
+    async grade(side, submission) {
+      this.requireConnection();
+      if (!this.room || this.role !== "host") return;
+      const { settings, teams } = this.room;
+      return this.api.runTransaction(this.roomRef("game"), game => TugGame.grade(game, settings, teams, side, submission) || undefined,
+        { applyLocally: false });
+    }
+
+    submit(question, round, value) {
+      this.requireConnection();
+      if (!this.room?.hostOnline) throw new Error("Ingen kontakt med tavlan. Vänta en stund.");
+      const submission = {
+        id: crypto.randomUUID(), uid: this.uid, questionId: question.id,
+        round, value, sentAt: this.api.serverTimestamp()
+      };
+      const write = this.api.set(this.roomRef(`answers/${this.role}`), submission);
+      return { submission, write };
+    }
+
+    async finish(manual = false) {
+      this.requireConnection();
+      const snapshot = await this.api.get(this.roomRef());
+      const room = snapshot.val();
+      if (!room || room.ownerUid !== this.uid) return;
+      const now = this.now();
+      await this.api.runTransaction(this.roomRef("game"), game => {
+        if (!game || game.phase !== "playing" || (!manual && now < game.endsAt + 800)) return;
+        // Ta med alla svar som hann fram innan tiden tog slut, även om tavlan fick dem lite senare.
+        let next = game;
+        for (const side of SIDES) {
+          const answer = room.answers?.[side];
+          if (manual && answer?.sentAt > now) continue;
+          next = TugGame.grade(next, room.settings, room.teams, side, answer) || next;
+        }
+        return { ...next, phase: "finished", winner: TugGame.winner(next.scores), finishedAt: this.api.serverTimestamp() };
+      }, { applyLocally: false });
+    }
+
+    async leave() {
+      const code = this.code;
+      const role = this.role;
+      this.unwatch?.(); this.unwatch = null;
+      this.role = null;
+      try {
+        if (code && this.api) {
+          const roomRef = this.api.ref(this.db, `${ROOM_PATH}/${code}`);
+          if (role === "host") {
+            // Att lämna värdvyn stänger spelrummet för båda iPads.
+            await FirebaseGame.timeout(this.api.remove(roomRef), "Spelrummet stängs när anslutningen kommer tillbaka.", 5000);
+            await this.presence?.cancel(); this.presence = null;
+          } else if (role && this.room?.game?.phase === "lobby" && this.connected) {
+            await this.api.remove(this.api.ref(this.db, `${ROOM_PATH}/${code}/teams/${role}`));
+          }
+        }
+      } finally {
+        this.code = null; this.room = null;
+      }
+    }
+  }
+  // #endregion
+
+  globalThis.MathTug = { TugMath, TugGame, FirebaseGame, SIDES, CONFIG };
+})();
+// #endregion
+
+</script>
+<script>
+// #region Dragkamp: tavla, iPad och knappar
+(() => {
+  "use strict";
+  const { TugMath, TugGame, FirebaseGame, SIDES } = MathTug;
+  const SESSION_KEY = "matte-dragkamp-session";
+  const PUBLIC_URL = "https://jakobbergsten.github.io/tarning_klocka/";
+
+  class TugBoard {
+    constructor(elements) { this.elements = elements; }
+
+    draw(room, now) {
+      const e = this.elements;
+      const game = room.game;
+      e.LeftName.textContent = room.teams?.left?.name || "Väntar på blått lag";
+      e.RightName.textContent = room.teams?.right?.name || "Väntar på orange lag";
+      e.LeftScore.textContent = String(game.scores.left);
+      e.RightScore.textContent = String(game.scores.right);
+      e.RopeGroup.style.transform = `translateX(${TugGame.pull(game.scores)}px)`;
+      e.BoardOverlay.classList.toggle("finished", game.phase === "finished");
+      e.BoardOverlay.classList.toggle("hidden", game.phase === "playing" && now >= game.startedAt && now < game.endsAt);
+      if (game.phase === "lobby") {
+        const ready = !!room.teams?.left && !!room.teams?.right;
+        e.BoardMessage.textContent = ready ? "Båda lagen är redo!" : "Lagen ansluter";
+        e.BoardDetail.textContent = ready ? "Starta matchen när klassen är klar." : "Välj Dragkamp på varje iPad och ange spelkoden.";
+      } else if (game.phase === "finished") {
+        e.BoardMessage.textContent = TugController.resultText(room);
+        e.BoardDetail.textContent = `${game.scores.left} – ${game.scores.right} rätta svar`;
+      } else if (now < game.startedAt) {
+        e.BoardMessage.textContent = String(Math.ceil((game.startedAt - now) / 1000));
+        e.BoardDetail.textContent = "Gör er redo!";
+      } else if (now >= game.endsAt) {
+        e.BoardMessage.textContent = "Tiden är ute!";
+        e.BoardDetail.textContent = "De sista svaren räknas.";
+      }
+    }
+  }
+
+  class TugController {
+    constructor() {
+      const ids = ["Card", "Title", "FullscreenBtn", "BackBtn", "Notice", "Menu", "Kind", "Limit", "Seconds", "CreateBtn",
+        "JoinForm", "JoinBtn", "CodeInput", "Side", "NameInput", "RestoreBtn", "MenuStatus", "Host", "RoomCode",
+        "TimerLabel", "HostTimer", "CopyBtn", "PlayerLink", "LeftName", "RightName", "LeftScore", "RightScore",
+        "RopeGroup", "BoardOverlay", "BoardMessage", "BoardDetail", "HostStatus", "StartBtn", "StopBtn", "Player",
+        "MyName", "PlayerTimer", "PlayerPrompt", "Question", "AnswerPanel", "AnswerInput", "Keypad", "EraseBtn",
+        "AnswerBtn", "Feedback", "PlayerResult"];
+      this.e = Object.fromEntries(ids.map(id => [id, document.getElementById("tug" + id)]));
+      this.service = new FirebaseGame(() => this.render());
+      this.board = new TugBoard(this.e);
+      this.room = null;
+      this.view = "menu";
+      this.opened = false;
+      this.busy = false;
+      this.answer = "";
+      this.questionId = null;
+      this.pending = null;
+      this.grading = new Set();
+      this.finishing = false;
+      this.session = this.readSession();
+      this.bind();
+      this.e.RestoreBtn.classList.toggle("hidden", !this.session);
+      if (!this.e.Card.requestFullscreen) this.e.FullscreenBtn.classList.add("hidden");
+      const code = new URL(location.href).searchParams.get("dragkamp");
+      if (/^\d{6}$/.test(code || "")) { this.e.CodeInput.value = code; this.open(); }
+    }
+
+    // #region Start, återanslutning och återgång
+    bind() {
+      document.getElementById("tugOpenBtn").addEventListener("click", () => this.open());
+      this.e.CreateBtn.addEventListener("click", () => this.run(async () => {
+        const settings = TugMath.settings(this.e.Kind.value, Number(this.e.Limit.value), Number(this.e.Seconds.value));
+        await this.enter(await this.service.create(settings));
+      }));
+      this.e.JoinForm.addEventListener("submit", event => {
+        event.preventDefault();
+        if (!this.e.JoinForm.reportValidity()) return;
+        this.run(async () => this.enter(await this.service.join(
+          this.e.CodeInput.value.trim(), this.e.Side.value, this.e.NameInput.value.trim())));
+      });
+      this.e.CodeInput.addEventListener("input", () => {
+        this.e.CodeInput.value = this.e.CodeInput.value.replace(/\D/g, "").slice(0, 6);
+      });
+      this.e.RestoreBtn.addEventListener("click", () => this.run(async () => {
+        if (this.session) await this.enter(await this.service.restore(this.session));
+      }));
+      this.e.BackBtn.addEventListener("click", () => this.back());
+      this.e.FullscreenBtn.addEventListener("click", async () => {
+        try {
+          if (document.fullscreenElement) await document.exitFullscreen();
+          else await this.e.Card.requestFullscreen();
+        } catch { this.notice("Helskärm stöds inte här. Du kan använda spelet i vanlig vy."); }
+      });
+      document.addEventListener("fullscreenchange", () => {
+        this.e.FullscreenBtn.textContent = document.fullscreenElement === this.e.Card ? "Avsluta helskärm" : "Helskärm";
+      });
+      this.e.StartBtn.addEventListener("click", () => this.run(() => this.service.start()));
+      this.e.StopBtn.addEventListener("click", () => this.run(() => this.service.finish(true)));
+      this.e.CopyBtn.addEventListener("click", () => this.copyLink());
+      this.e.Keypad.querySelectorAll("[data-digit]").forEach(button => {
+        button.addEventListener("click", () => this.digit(button.dataset.digit));
+      });
+      this.e.EraseBtn.addEventListener("click", () => this.erase());
+      this.e.AnswerBtn.addEventListener("click", () => this.submit());
+      document.addEventListener("keydown", event => {
+        if (!this.opened || this.view !== "player" || event.ctrlKey || event.metaKey || event.altKey) return;
+        if (/^\d$/.test(event.key)) { event.preventDefault(); this.digit(event.key); }
+        if (event.key === "Backspace" || event.key === "Delete") { event.preventDefault(); this.erase(); }
+        if (event.key === "Enter") { event.preventDefault(); this.submit(); }
+      });
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) { this.render(); this.processAnswers(); }
+      });
+    }
+
+    open() {
+      if (this.opened) return;
+      this.opened = true;
+      document.getElementById("setupCard").classList.add("hidden");
+      this.e.Card.classList.remove("hidden");
+      this.timer = setInterval(() => {
+        this.render();
+        const game = this.room?.game;
+        if (this.service.role === "host" && game?.phase === "playing"
+            && this.service.now() >= game.endsAt + 800 && this.service.connected && !this.finishing) {
+          this.finishing = true;
+          this.service.finish().catch(error => this.notice(this.errorText(error)))
+            .finally(() => { this.finishing = false; });
+        }
+      }, 200);
+      this.render();
+      window.scrollTo({ top: 0 });
+    }
+
+    async enter(room) {
+      this.room = room;
+      this.view = this.service.role === "host" ? "host" : "player";
+      this.answer = ""; this.pending = null; this.questionId = null;
+      this.session = { code: this.service.code, role: this.service.role };
+      try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(this.session)); } catch {}
+      this.e.MenuStatus.textContent = "";
+      this.e.HostStatus.textContent = "";
+      this.e.RoomCode.textContent = this.service.code;
+      this.e.PlayerLink.href = this.playerUrl();
+      this.service.watch(next => this.onRoom(next), error => this.notice(this.errorText(error)));
+      this.render();
+    }
+
+    async back() {
+      if (this.busy) return;
+      this.busy = true;
+      this.render();
+      try { await this.service.leave(); } catch {}
+      if (document.fullscreenElement === this.e.Card) { try { await document.exitFullscreen(); } catch {} }
+      clearInterval(this.timer);
+      this.opened = false; this.view = "menu"; this.room = null; this.answer = ""; this.pending = null;
+      this.session = null; this.busy = false; this.grading.clear();
+      try { sessionStorage.removeItem(SESSION_KEY); } catch {}
+      this.e.MenuStatus.textContent = ""; this.e.RestoreBtn.classList.add("hidden");
+      this.e.Feedback.textContent = "";
+      this.notice("");
+      this.e.Card.classList.add("hidden");
+      document.getElementById("setupCard").classList.remove("hidden");
+      document.getElementById("tugOpenBtn").focus();
+    }
+
+    readSession() {
+      try {
+        const session = JSON.parse(sessionStorage.getItem(SESSION_KEY));
+        return session && /^\d{6}$/.test(session.code) && ["host", ...SIDES].includes(session.role) ? session : null;
+      } catch { return null; }
+    }
+
+    async run(action) {
+      if (this.busy) return;
+      this.busy = true;
+      this.e.MenuStatus.textContent = this.view === "menu" ? "Ansluter…" : "";
+      this.notice("");
+      this.render();
+      try { await action(); }
+      catch (error) {
+        const message = this.errorText(error);
+        if (this.view === "menu") this.e.MenuStatus.textContent = message;
+        else this.notice(message);
+      } finally {
+        this.busy = false;
+        if (this.e.MenuStatus.textContent === "Ansluter…") this.e.MenuStatus.textContent = "";
+        this.render();
+      }
+    }
+    // #endregion
+
+    // #region Ta emot speldata och räkna varje svar högst en gång
+    onRoom(room) {
+      this.room = room;
+      if (!room) { this.notice("Spelrummet har stängts. Gå tillbaka och anslut till ett nytt spel."); this.render(); return; }
+      if (this.view === "player") {
+        const side = this.service.role;
+        const question = room.game.questions?.[side];
+        const ack = room.game.acks?.[side];
+        if (this.pending && ack?.id === this.pending.id) {
+          this.pending = null;
+          this.answer = "";
+          this.feedback(ack.correct ? "Rätt! Nästa fråga." : "Försök igen.", ack.correct);
+        }
+        if (question?.id !== this.questionId) { this.questionId = question?.id || null; this.answer = ""; }
+      }
+      this.render();
+      this.processAnswers();
+    }
+
+    processAnswers() {
+      if (this.service.role !== "host" || !this.service.connected || this.room?.game.phase !== "playing") return;
+      for (const side of SIDES) {
+        const submission = this.room.answers?.[side];
+        if (!submission || submission.questionId !== this.room.game.questions?.[side]?.id
+            || this.room.game.acks?.[side]?.id === submission.id || this.grading.has(submission.id)) continue;
+        this.grading.add(submission.id);
+        this.service.grade(side, submission).catch(error => this.notice(this.errorText(error)))
+          .finally(() => this.grading.delete(submission.id));
+      }
+    }
+
+    canAnswer() {
+      const game = this.room?.game;
+      const now = this.service.now();
+      return Boolean(this.view === "player" && this.service.connected && this.room?.hostOnline
+        && this.room?.teams?.[this.service.role]?.uid === this.service.uid && !this.pending
+        && this.room.expiresAt > now && game?.phase === "playing" && now >= game.startedAt && now < game.endsAt);
+    }
+
+    digit(digit) {
+      if (!this.canAnswer() || !/^\d$/.test(digit) || this.answer.length >= 3) return;
+      this.answer = this.answer === "0" ? digit : this.answer + digit;
+      this.renderAnswer();
+    }
+
+    erase() {
+      if (!this.canAnswer()) return;
+      this.answer = this.answer.slice(0, -1);
+      this.renderAnswer();
+    }
+
+    async submit() {
+      if (!this.canAnswer() || this.answer === "") return;
+      const question = this.room.game.questions[this.service.role];
+      let attemptId;
+      try {
+        const { submission, write } = this.service.submit(question, this.room.game.round, Number(this.answer));
+        attemptId = submission.id;
+        this.pending = submission;
+        this.feedback("Kontrollerar svaret…");
+        this.renderAnswer();
+        await FirebaseGame.timeout(write, "Svaret kunde inte bekräftas. Kontrollera anslutningen och försök igen.", 10000);
+      } catch (error) {
+        // Ett sent fel från en äldre fråga ska inte avbryta nästa svar.
+        if (attemptId && this.pending?.id !== attemptId) return;
+        this.pending = null;
+        this.feedback(this.errorText(error));
+        this.renderAnswer();
+      }
+    }
+    // #endregion
+
+    // #region Visa tavla respektive elevens frågor
+    render() {
+      if (!this.opened) return;
+      const e = this.e;
+      e.Menu.classList.toggle("hidden", this.view !== "menu");
+      e.Host.classList.toggle("hidden", this.view !== "host");
+      e.Player.classList.toggle("hidden", this.view !== "player");
+      e.CreateBtn.disabled = e.JoinBtn.disabled = e.RestoreBtn.disabled = e.BackBtn.disabled = this.busy;
+      if (this.view === "menu") return;
+      const room = this.room;
+      if (!room) {
+        e.StartBtn.disabled = e.StopBtn.disabled = true;
+        e.AnswerPanel.classList.add("hidden");
+        e.PlayerResult.classList.add("hidden");
+        e.PlayerPrompt.textContent = "Gå tillbaka och anslut till ett nytt spel.";
+        e.Question.textContent = "Spelrummet är stängt.";
+        e.PlayerTimer.textContent = "—";
+        this.renderAnswer();
+        return;
+      }
+      const game = room.game;
+      const now = this.service.now();
+      if (!this.service.connected) this.notice("Anslutningen är bruten. Vänta tills internet är tillbaka.", true);
+      else if (this.view === "player" && !room.hostOnline) this.notice("Ingen kontakt med tavlan. Vänta på läraren.", true);
+      else if (e.Notice.dataset.connection === "true") this.notice("");
+      if (room.expiresAt <= now) this.notice("Spelrummet har gått ut. Skapa ett nytt spelrum.");
+      if (this.view === "host") {
+        this.board.draw(room, now);
+        e.TimerLabel.textContent = game.phase === "playing" && now < game.startedAt ? "START OM" : "TID KVAR";
+        e.HostTimer.textContent = game.phase === "lobby" ? TugController.time(room.settings.seconds)
+          : now < game.startedAt ? String(Math.ceil((game.startedAt - now) / 1000))
+          : TugController.time(game.phase === "finished" ? 0 : Math.max(0, Math.ceil((game.endsAt - now) / 1000)));
+        e.StartBtn.classList.toggle("hidden", game.phase === "playing");
+        e.StopBtn.classList.toggle("hidden", game.phase !== "playing");
+        e.StartBtn.textContent = game.phase === "finished" ? "Spela igen" : "Starta matchen";
+        e.StartBtn.disabled = this.busy || !room.teams?.left || !room.teams?.right || !this.service.connected || room.expiresAt <= now;
+        e.StopBtn.disabled = this.busy || !this.service.connected;
+        e.HostStatus.textContent = game.phase === "lobby" ? "Varje rätt svar drar repet mot lagets sida."
+          : game.phase === "finished" ? "Samma lag kan spela igen med samma kod." : "Matchen pågår. Låt tavlvyn vara öppen.";
+      } else this.renderPlayer(room, now);
+    }
+
+    renderPlayer(room, now) {
+      const e = this.e;
+      const side = this.service.role;
+      const game = room.game;
+      e.MyName.textContent = room.teams?.[side]?.name || "Mitt lag";
+      e.MyName.style.color = side === "left" ? "#225c97" : "#925018";
+      e.AnswerPanel.classList.toggle("hidden", game.phase !== "playing" || now < game.startedAt || now >= game.endsAt);
+      e.PlayerResult.classList.toggle("hidden", game.phase !== "finished");
+      if (game.phase === "lobby") {
+        e.PlayerPrompt.textContent = "Läraren startar matchen på tavlan.";
+        e.Question.textContent = "Gör er redo!";
+        e.PlayerTimer.textContent = "Väntar";
+        e.Feedback.textContent = "";
+      } else if (game.phase === "finished") {
+        e.PlayerPrompt.textContent = "Titta på tavlan för slutresultatet.";
+        e.Question.textContent = "Matchen är slut!";
+        e.PlayerResult.textContent = TugController.resultText(room);
+        e.PlayerTimer.textContent = "0:00";
+        e.Feedback.textContent = "";
+        this.pending = null;
+      } else if (now < game.startedAt) {
+        e.PlayerPrompt.textContent = "Matchen börjar om";
+        e.Question.textContent = String(Math.ceil((game.startedAt - now) / 1000));
+        e.PlayerTimer.textContent = TugController.time(room.settings.seconds);
+        e.Feedback.textContent = "";
+      } else if (now >= game.endsAt) {
+        e.PlayerPrompt.textContent = "Titta på tavlan.";
+        e.Question.textContent = "Tiden är ute!";
+        e.PlayerTimer.textContent = "0:00";
+      } else {
+        e.PlayerPrompt.textContent = "Räkna och skriv svaret.";
+        e.Question.textContent = TugMath.text(game.questions[side]);
+        e.PlayerTimer.textContent = TugController.time(Math.max(0, Math.ceil((game.endsAt - now) / 1000)));
+      }
+      this.renderAnswer();
+    }
+
+    renderAnswer() {
+      this.e.AnswerInput.value = this.answer;
+      this.e.Keypad.querySelectorAll("button").forEach(button => { button.disabled = !this.canAnswer(); });
+      this.e.AnswerBtn.disabled = !this.canAnswer() || this.answer === "";
+    }
+
+    feedback(message, correct = false) {
+      this.e.Feedback.textContent = message;
+      this.e.Feedback.style.color = correct ? "#257a43" : "#6f4750";
+    }
+
+    notice(message, connection = false) {
+      this.e.Notice.textContent = message;
+      this.e.Notice.classList.toggle("hidden", !message);
+      this.e.Notice.dataset.connection = String(connection);
+    }
+
+    errorText(error) {
+      const code = String(error?.code || "").toLowerCase();
+      if (code.includes("operation-not-allowed") || code.includes("configuration-not-found")) return "Aktivera Anonymous i Firebase Authentication för att starta spelet.";
+      if (code.includes("permission-denied") || code.includes("permission_denied")) return "Spelet behöver sina databasregler i Firebase. Be läraren kontrollera inställningen.";
+      if (code.includes("network") || code.includes("unavailable")) return "Kunde inte ansluta. Kontrollera internet och försök igen.";
+      if (code.includes("invalid-api-key") || code.includes("app-not-authorized")) return "Spelets anslutning behöver kontrolleras. Be läraren se över inställningarna.";
+      return error?.message || "Något gick fel. Försök igen.";
+    }
+
+    playerUrl() {
+      const url = new URL(location.protocol === "file:" ? PUBLIC_URL : location.href);
+      url.search = ""; url.hash = "";
+      url.searchParams.set("dragkamp", this.service.code);
+      return url.href;
+    }
+
+    async copyLink() {
+      try { await navigator.clipboard.writeText(this.playerUrl()); this.notice("Spelarlänken är kopierad."); }
+      catch { this.notice("Använd spelkoden på tavlan eller håll inne Öppna spelarvyn för att kopiera länken."); }
+    }
+
+    static time(seconds) { return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`; }
+    static resultText(room) {
+      const winner = TugGame.winner(room.game.scores);
+      return winner === "draw" ? "Oavgjort!" : `${room.teams[winner].name} vann!`;
+    }
+    // #endregion
+  }
+
+  Object.assign(MathTug, { TugBoard, TugController });
+  new TugController();
+})();
+// #endregion
+
 </script>
 </body>
 </html>
