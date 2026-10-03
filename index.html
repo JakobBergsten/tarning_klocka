@@ -2247,14 +2247,24 @@ function numberToX(v, left, right) {
           this.offset = snapshot.val() || 0;
         });
       }
-      await FirebaseGame.timeout(new Promise(resolve => {
-        const unwatch = databaseSdk.onValue(databaseSdk.ref(this.db, ".info/connected"), snapshot => {
-          if (snapshot.val() === true) { unwatch(); resolve(); }
-        });
-        setTimeout(unwatch, 15000);
-      }), "Ingen kontakt med spelet. Kontrollera internet och försök igen.");
-      const clock = await databaseSdk.get(databaseSdk.ref(this.db, ".info/serverTimeOffset"));
-      this.offset = clock.val() || 0;
+      // .info finns i SDK:ns lokala statusdata. Ett get() skickar en otillåten sökväg till servern.
+      // Lyssnaren ovan får serverns klockskillnad innan anslutningen markeras som klar.
+      await this.waitForConnection();
+    }
+
+    async waitForConnection() {
+      if (this.connected) return;
+      let unwatch;
+      try {
+        await FirebaseGame.timeout(new Promise((resolve, reject) => {
+          unwatch = this.api.onValue(this.api.ref(this.db, ".info/connected"), snapshot => {
+            if (snapshot.val() === true) { this.connected = true; resolve(); }
+          }, reject);
+        }), "Ingen kontakt med spelet. Kontrollera internet och försök igen.");
+      } finally {
+        // Städningen sker efter registreringen, även när ett cachat svar kommer direkt.
+        unwatch?.();
+      }
     }
 
     requireConnection() {
