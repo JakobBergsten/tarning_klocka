@@ -273,7 +273,16 @@
 }
 @media (prefers-reduced-motion: reduce) { #tugRopeGroup { transition: none; } }
 /* #endregion */
-  </style>
+  /* #region Kartövningarnas mål och kartnyckel */
+.soLessonIntro { background:#edf5f3; border-left:4px solid #528675; padding:10px 16px; border-radius:8px; margin:12px 0; }
+#soGoal { font-weight:700; margin:0 0 6px; }
+#soHow { margin:0; line-height:1.5; }
+.soMapKey, .soCurriculum { margin:12px 0; line-height:1.6; }
+#soMapLegend { display:flex; flex-wrap:wrap; gap:10px; padding:12px 0; }
+#soMapLegend span { display:flex; align-items:center; gap:6px; background:#f3f5f8; border-radius:8px; padding:5px 10px; }
+#soMapLegend svg { width:40px; height:40px; }
+/* #endregion */
+</style>
 </head>
 <body>
   <div class="app">
@@ -511,6 +520,7 @@
       <label id="soWordHelpField"><input id="soWordHelp" type="checkbox" checked> Språkstöd</label>
     </div>
   </details>
+  <div class="soLessonIntro"><p id="soGoal"></p><p id="soHow"></p></div>
   <div class="soPromptBox">
     <p id="soPromptLabel" class="soPromptLabel">KLASSENS UPPDRAG</p>
     <h2 id="soPrompt" aria-live="polite"></h2>
@@ -531,6 +541,8 @@
     </aside>
     <div class="soMapFrame"><svg id="soMap" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 840 620" preserveAspectRatio="xMidYMid meet" role="group" aria-label="Karta med platser. Tryck på en ruta för att placera figuren." aria-describedby="soStatus"></svg></div>
   </div>
+  <details class="soMapKey"><summary>Kartnyckel – vad betyder bilderna?</summary><div id="soMapLegend"></div><p>Kartan visar ett påhittat närområde uppifrån. Blått är vatten. Vägar och små gångar visar var figuren kan gå. En ruta är ett steg, inte ett bestämt antal meter.</p></details>
+  <details class="soCurriculum"><summary>Till läraren: läromål och uppföljning</summary><p>Övningsmålen anknyter till Lgr22, SO åk 1–3: kartor över närområdet, väderstreck samt yrken och verksamheter i närområdet. Lägesorden anknyter också till matematikens rumsuppfattning. Detta är mål för övningarna, inte separata betygskriterier.</p><p>Låt eleven visa och förklara: Hur hittade du platsen? Vilka riktningar använde du? Varför behövs platsen och vilka arbetar där? Avsluta med att rita er egen skolväg eller skolgård och jämföra med kartan.</p><a href="https://syllabuswebb.skolverket.se/compulsorycw/jsp/subject.htm?subjectCode=GRGRGEO01&amp;tos=gr" target="_blank" rel="noopener">Lgr22 – geografi, Skolverket</a></details>
   <footer class="soFooter">
     <div class="soFooterRow">
       <div id="soMoves" class="soMoves" aria-label="Flytta figuren en ruta"><button class="secondary" type="button" data-direction="west">← Vänster</button><button class="secondary" type="button" data-direction="north">↑ Upp</button><button class="secondary" type="button" data-direction="south">↓ Ner</button><button class="secondary" type="button" data-direction="east">Höger →</button></div>
@@ -1341,14 +1353,15 @@
   // #region Klocka: språk och visningsstöd
   class ClockLanguage {
     static parts(time, useQuarter = false) {
-      const hour = time.h % 12 || 12;
-      const nextHour = (time.h + 1) % 12 || 12;
+      const words = ["noll", "ett", "två", "tre", "fyra", "fem", "sex", "sju", "åtta", "nio", "tio", "elva", "tolv"];
+      const hour = words[time.h % 12 || 12];
+      const nextHour = words[(time.h + 1) % 12 || 12];
       if (time.m === 0) return [`Klockan ${hour}`, ""];
       if (time.m === 30) return [`Halv ${nextHour}`, ""];
       const isBefore = time.m > 30;
       const minutes = isBefore ? 60 - time.m : time.m;
       const amount = useQuarter && minutes === 15 ? "Kvart"
-        : `${minutes} ${minutes === 1 ? "minut" : "minuter"}`;
+        : ({5: "Fem", 10: "Tio", 15: "Femton", 20: "Tjugo", 25: "Tjugofem"}[minutes] || words[minutes]);
       return [amount, `${isBefore ? "i" : "över"} ${isBefore ? nextHour : hour}`];
     }
 
@@ -3660,24 +3673,24 @@ function numberToX(v, left, right) {
   // #region Samhällsbygget: lektionssyften, frågor och flyttbara platser
   class CommunityBuilder {
     static questions = [
-      { id: "need", purpose: "help", title: "Vad behöver samhället?", prompt: "Vad behöver finnas i vårt samhälle?", support: "Vi behöver … för att …" },
-      { id: "school", purpose: "position", title: "Skolans plats", prompt: "Var ska skolan ligga?", support: "Skolan ska ligga bredvid …" },
-      { id: "park", purpose: "position", title: "Parken bredvid skolan", prompt: "Placera parken bredvid skolan. Varför passar den där?", support: "Parken ligger bredvid … Det är bra för att …" },
-      { id: "home", purpose: "position", title: "På andra sidan ån", prompt: "Placera {home} på andra sidan ån från skolan.", support: "På ena sidan finns … På andra sidan finns …" },
-      { id: "left", purpose: "position", title: "Till vänster om", prompt: "Placera lekplatsen till vänster om {home}.", support: "Lekplatsen ligger till vänster om …" },
-      { id: "between", purpose: "position", title: "Mellan två platser", prompt: "Placera biblioteket mellan skolan och {home}.", support: "Biblioteket ligger mellan … och …" },
+      { id: "need", purpose: "help", title: "Vad behöver samhället?", prompt: "Bygg ett hem, en skola och en affär. Berätta vad människor kan göra på varje plats.", support: "Vi behöver … för att …" },
+      { id: "school", purpose: "position", title: "Skolans plats", prompt: "Placera ett hem och en skola. Beskriv var skolan ligger jämfört med hemmet.", support: "Skolan ska ligga bredvid …" },
+      { id: "park", purpose: "position", title: "Parken bredvid skolan", prompt: "Placera en skola och en park i rutan bredvid. Förklara varför en park nära skolan kan vara bra.", support: "Parken ligger bredvid … Det är bra för att …" },
+      { id: "home", purpose: "position", title: "På andra sidan ån", prompt: "Placera en skola på ena sidan ån och {home} på den andra. Hur kan barnen ta sig till skolan?", support: "På ena sidan finns … På andra sidan finns …" },
+      { id: "left", purpose: "position", title: "Till vänster om", prompt: "Placera {home} och sedan en lekplats i rutan till vänster om hemmet.", support: "Lekplatsen ligger till vänster om …" },
+      { id: "between", purpose: "position", title: "Mellan två platser", prompt: "Placera en skola och {home} på samma rad med en tom ruta mellan. Placera biblioteket i den tomma rutan.", support: "Biblioteket ligger mellan … och …" },
       { id: "describe", purpose: "position", title: "Beskriv vårt samhälle", prompt: "Beskriv vårt samhälle för någon som inte har sett kartan.", support: "Här finns … Bredvid … ligger …" },
-      { id: "sick", purpose: "help", title: "Någon blir sjuk", prompt: "Någon blir sjuk. Var kan personen få hjälp?", support: "Personen kan få hjälp på …" },
-      { id: "fire", purpose: "help", title: "Det börjar brinna", prompt: "Det börjar brinna. Vilken plats behöver samhället?", support: "Vi behöver … Där arbetar …" },
-      { id: "books", purpose: "help", title: "Låna böcker", prompt: "Var kan människor låna böcker?", support: "Vi behöver … Där kan vi …" },
-      { id: "shopping", purpose: "help", title: "Köpa mat", prompt: "Var kan människorna köpa mat?", support: "Vi behöver … för att …" },
+      { id: "sick", purpose: "help", title: "Någon blir sjuk", prompt: "En person blir sjuk och behöver vård. Placera ett sjukhus. Vilka arbetar där och hur hjälper de personen?", support: "Personen kan få hjälp på …" },
+      { id: "fire", purpose: "help", title: "Det börjar brinna", prompt: "Det brinner i ett hus. Placera ett hem och en brandstation. Vilka rycker ut och vad gör de?", support: "Vi behöver … Där arbetar …" },
+      { id: "books", purpose: "help", title: "Låna böcker", prompt: "Barnen vill låna böcker. Placera ett bibliotek. Vad kan man göra där och vilka arbetar där?", support: "Vi behöver … Där kan vi …" },
+      { id: "shopping", purpose: "help", title: "Köpa mat", prompt: "En familj behöver köpa mat. Placera en affär nära ett hem. Vad behöver finnas i affären?", support: "Vi behöver … för att …" },
       { id: "jobs", purpose: "help", title: "Yrken i samhället", prompt: "Vilka arbetar på de platser vi har byggt?", support: "På … arbetar … De hjälper oss med …" },
-      { id: "school-road", purpose: "safe", title: "Trygg väg till skolan", prompt: "Hur kommer barnen säkert till skolan?", support: "Barnen kan gå … Det blir tryggare om …" },
-      { id: "bridge", purpose: "safe", title: "Ta sig över ån", prompt: "Hur kan alla ta sig över ån?", support: "Vi behöver en bro … för att …" },
-      { id: "fire-road", purpose: "safe", title: "Brandbilen ska komma fram", prompt: "Hur kan brandbilen komma fram till {home}?", support: "Vi bygger vägen … så att …" },
-      { id: "bus", purpose: "safe", title: "Resa utan bil", prompt: "Hur kan man ta sig till skolan utan bil?", support: "Man kan … om det finns …" },
-      { id: "play-road", purpose: "safe", title: "Trygg väg till lekplatsen", prompt: "Hur gör vi vägen till lekplatsen trygg?", support: "Det blir tryggare om …" },
-      { id: "no-bridge", purpose: "safe", title: "Om bron försvinner", prompt: "Hur tar vi oss fram om bron försvinner?", support: "Utan bron behöver vi …" }
+      { id: "school-road", purpose: "safe", title: "Trygg väg till skolan", prompt: "Placera ett hem och en skola. Bygg en väg mellan dem. Visa vägen och prata om hur barnen kan gå tryggt.", support: "Barnen kan gå … Det blir tryggare om …" },
+      { id: "bridge", purpose: "safe", title: "Ta sig över ån", prompt: "Placera ett hem och en skola på varsin sida av ån. Bygg en bro och vägar som ansluter till bron.", support: "Vi behöver en bro … för att …" },
+      { id: "fire-road", purpose: "safe", title: "Brandbilen ska komma fram", prompt: "Placera en brandstation och {home}. Bygg en väg så att brandbilen kan komma fram.", support: "Vi bygger vägen … så att …" },
+      { id: "bus", purpose: "safe", title: "Resa utan bil", prompt: "Placera en skola och en busshållplats nära skolan. Hur kan barnen resa dit utan bil?", support: "Man kan … om det finns …" },
+      { id: "play-road", purpose: "safe", title: "Trygg väg till lekplatsen", prompt: "Placera ett hem och en lekplats. Bygg en väg mellan dem. Var behöver vi vara extra försiktiga?", support: "Det blir tryggare om …" },
+      { id: "no-bridge", purpose: "safe", title: "Om bron försvinner", prompt: "Bygg en bro med vägar på båda sidor. Ta sedan bort bron. Visa vad som händer och föreslå en lösning.", support: "Utan bron behöver vi …" }
     ];
 
     constructor() {
@@ -4062,7 +4075,7 @@ function numberToX(v, left, right) {
       } else this.map.newTask(this.e.Activity.value);
       this.render();
       this.status(this.kind === "community" ? "Låt klassen samtala och pröva olika förslag." :
-        "Du flyttar figuren och väljer när svaret visas.");
+        "Läs uppdraget tillsammans. Låt en elev visa och förklara innan ni visar facit.");
       if (withSound) this.sound("task");
     }
 
@@ -4078,6 +4091,30 @@ function numberToX(v, left, right) {
       const e = this.e, building = this.kind === "community";
       e.Title.textContent = building ? "Bygg ett samhälle" : "Uppdragskartan";
       e.PromptLabel.textContent = building ? "KLASSENS SAMTALSFRÅGA" : "KLASSENS UPPDRAG";
+      // #region Elevnära mål och arbetsgång
+      const goals = building ? {
+        position: "Jag kan placera platser på en karta och beskriva var de ligger.",
+        help: "Jag kan berätta vad platser i ett samhälle används till och vilka som arbetar där.",
+        safe: "Jag kan visa en väg mellan platser och resonera om hur vi tar oss fram tryggt."
+      } : {
+        find: "Jag kan hitta en plats med hjälp av lägesord eller väderstreck.",
+        route: "Jag kan följa en vägbeskrivning på en karta.",
+        describe: "Jag kan beskriva en väg så att en kamrat hittar fram."
+      };
+      document.getElementById("soGoal").textContent = "Dagens mål: " + goals[building ? this.question.purpose : this.map.task.activity];
+      document.getElementById("soHow").textContent = building
+        ? "1. Läs uppdraget. 2. Välj en bild och tryck på en tom ruta. 3. Visa och förklara ert förslag. Ni kan bygga på flera olika sätt."
+        : this.map.task.activity === "find"
+          ? "1. Hitta startplatsen. 2. Läs ledtråden och räkna rutorna. 3. Tryck på platsen ni tror är rätt."
+          : this.map.task.activity === "route"
+            ? "1. Hitta figuren vid starten. 2. Läs instruktionen. 3. Flytta en ruta per tryck. Följ vägarna och använd bron över ån."
+            : "1. Hitta start och mål. 2. Beskriv en väg för en kamrat. 3. Låt kamraten flytta figuren efter era instruktioner.";
+      const legendKinds = building ? Object.keys(places).filter(kind => kind !== "erase" && PlaceWords.visible(kind, e.Words.value))
+        : [...new Set(this.map.landmarks.map(place => place.kind).concat("road"))];
+      document.getElementById("soMapLegend").innerHTML = legendKinds.map(kind =>
+        '<span>' + CityArtwork.svgIcon(kind) + text(PlaceWords.name(kind, e.Words.value)) + '</span>').join("");
+      // #endregion
+
       e.NewBtn.textContent = building ? "Ny samtalsfråga" : "Nytt uppdrag";
       e.Palette.classList.toggle("hidden", !building);
       e.Workspace.classList.toggle("building", building);
@@ -4146,8 +4183,27 @@ function numberToX(v, left, right) {
     pressCell(cell) {
       if (this.kind === "missionmap") {
         const result = this.map.moveTo(cell);
-        if (result.moved) { this.render(); this.sound("step"); }
-        this.status(result.message);
+        if (result.moved) {
+          // #region Automatisk instruktion när figuren följer uppdragets väg
+          if (this.map.task.activity === "route") {
+            const path = this.map.task.path;
+            const travelled = this.map.travelled;
+            const followsPath = travelled.length <= path.length && travelled.every((point, index) => MapGrid.same(point, path[index]));
+            if (followsPath) {
+              let completed = 0, segment = 0;
+              for (const step of MapGrid.pathSteps(path)) {
+                completed += step.count;
+                if (travelled.length - 1 < completed) break;
+                segment++;
+              }
+              this.stepIndex = Math.min(segment, MapGrid.pathSteps(path).length - 1);
+            }
+          }
+          // #endregion
+          this.render(); this.sound("step");
+        }
+        const atTarget = result.moved && MapGrid.same(this.map.avatar, this.map.task.target);
+        this.status(atTarget ? "Ni är framme vid " + PlaceWords.at(this.map.task.target.kind, this.e.Words.value) + ". Berätta hur ni hittade dit!" : result.message);
         return;
       }
       const key = MapGrid.key(cell.c, cell.r), existing = this.builder.cells[key];
