@@ -335,6 +335,15 @@
           </select>
         </div>
         <div class="settingField">
+          <label for="clockDirection">Över eller i?</label>
+          <select id="clockDirection" aria-describedby="clockDirectionHint">
+            <option value="both" selected>Både över och i</option>
+            <option value="over">Bara över</option>
+            <option value="before">Bara i</option>
+          </select>
+          <p class="hint" id="clockDirectionHint">Filtrerar valt minutintervall. Hel och halv ingår bara när du väljer båda.</p>
+        </div>
+        <div class="settingField">
           <label for="clockDisplay">Visa klockslaget som</label>
           <select id="clockDisplay">
             <option value="analog" selected>Analog klocka</option>
@@ -764,6 +773,8 @@
   const placeValueShapesEl = document.getElementById("placeValueShapes");
   const numDiceEl = document.getElementById("numDice");
   const intervalEl = document.getElementById("interval");
+  const clockDirectionEl = document.getElementById("clockDirection");
+  const clockDirectionHint = document.getElementById("clockDirectionHint");
   const clockDisplayEl = document.getElementById("clockDisplay");
   const clockColorsEl = document.getElementById("clockColors");
   const clockMinutesEl = document.getElementById("clockMinutes");
@@ -1095,9 +1106,20 @@
     numDiceEl.value = diceN;
   });
 
+  // #region Avgränsa klockslagen till över eller i
+  function syncClockDirection() {
+    const wholeOrHalf = ["30", "60"].includes(intervalEl.value);
+    clockDirectionEl.disabled = wholeOrHalf;
+    clockDirectionHint.textContent = wholeOrHalf
+      ? "Valet över/i används inte vid hel- eller halvtimmessteg."
+      : "Filtrerar valt minutintervall. Hel och halv ingår bara när du väljer båda.";
+  }
   intervalEl.addEventListener("change", () => {
     interval = intervalEl.value;
+    syncClockDirection();
   });
+  syncClockDirection();
+  // #endregion
 
   clockDisplayEl.addEventListener("change", () => setClockDisplay(clockDisplayEl.value));
   clockViewBtn.addEventListener("click", () => setClockDisplay(clockDisplay === "analog" ? "text" : "analog"));
@@ -1440,8 +1462,11 @@
 
   function randomTime(interval, excludedMinute = null, excludedHour = null) {
     const step = interval === "all" ? 5 : Number(interval);
+    const direction = step === 30 || step === 60 ? "both" : clockDirectionEl.value;
     const possibleMinutes = Array.from({ length: 60 }, (_, minute) => minute)
-      .filter(minute => minute !== 25 && minute !== 35 && minute % step === 0);
+      .filter(minute => minute !== 25 && minute !== 35 && minute % step === 0)
+      .filter(minute => direction === "over" ? minute > 0 && minute < 30
+        : direction === "before" ? minute > 30 : true);
     const availableMinutes = possibleMinutes.length > 1
       ? possibleMinutes.filter(minute => minute !== excludedMinute)
       : possibleMinutes;
