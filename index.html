@@ -283,10 +283,130 @@
 #soMapLegend svg { width:40px; height:40px; }
 /* #endregion */
 </style>
+<style id="classroom-interface-refresh">
+/* Shared classroom interface. Keep the canvas and exercise logic unchanged. */
+:root {
+  --ui-paper: #f6f7fb;
+  --ui-panel: #fff;
+  --ui-ink: #20334c;
+  --ui-muted: #53667d;
+  --ui-line: #dce4ee;
+  --ui-brand: #245c96;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+body { background: var(--ui-paper); color: var(--ui-ink); }
+.app { max-width: 1180px; padding: 24px; }
+.card { border: 1px solid var(--ui-line); border-radius: 20px; padding: 24px; box-shadow: 0 8px 32px #20334c06; }
+button, input, select { font: inherit; }
+button { min-height: 44px; padding: 10px 16px; border: 1px solid transparent; border-radius: 12px; background: var(--ui-brand); font-size: 14px; font-weight: 600; line-height: 1.35; }
+button.secondary { background: #f0f3f8; color: var(--ui-ink); border-color: var(--ui-line); }
+button:not(:disabled):hover { filter: brightness(.96); }
+button:disabled { opacity: .55; }
+button, label, summary { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, a:focus-visible {
+  outline: 3px solid #438dcc; outline-offset: 3px;
+}
+#setupCard input[type="number"], #setupCard input[type="text"], #setupCard select {
+  min-height: 44px; max-width: 100%; padding: 10px 12px; border: 1px solid #cbd6e3; border-radius: 10px; background: white; color: var(--ui-ink); font-size: 16px;
+}
+input[type="checkbox"], input[type="radio"] { accent-color: var(--ui-brand); flex-shrink: 0; }
+.hint, .setupIntro { color: var(--ui-muted); line-height: 1.55; }
+.setupEyebrow { margin: 0 0 8px; color: var(--ui-muted); font-size: 12px; font-weight: 650; letter-spacing: .08em; text-transform: uppercase; }
+#setupCard h1 { font-size: clamp(26px, 4vw, 34px); letter-spacing: -.025em; margin-bottom: 8px; }
+.setupIntro { max-width: 650px; margin-bottom: 24px; }
+.toolSectionLabel { margin: 24px 0 10px; color: var(--ui-muted); }
+.toolMenu { gap: 12px; }
+.toolChoice { min-width: 0; min-height: 88px; align-items: flex-start; padding: 16px 12px; border-radius: 13px; background: white; transition: background-color .15s, border-color .15s; }
+.toolChoice input { margin-top: 3px; }
+.toolChoice span { min-width: 0; overflow-wrap: anywhere; }
+.toolChoice strong { color: var(--ui-ink); line-height: 1.35; }
+.toolChoice small { color: var(--ui-muted); font-size: 13px; line-height: 1.45; }
+.toolChoice:hover { border-color: #9eb8d3; }
+.toolChoice:has(input:checked) { background: #eaf2fc; border-color: var(--ui-brand); box-shadow: inset 0 0 0 1px var(--ui-brand); }
+.settingsPanel { padding: 20px; background: #f8fafd; border: 1px solid var(--ui-line); border-radius: 16px; }
+#clockOptions { gap: 20px; }
+.settingField { gap: 8px; }
+.settingField .hint { margin-top: 0; }
+.clockChecks, .soSetupChecks { gap: 12px 24px; }
+.clockChecks label, .soSetupChecks label, #answerOptions label { min-height: 32px; gap: 8px; }
+#answerOptions label { display: flex; align-items: center; }
+#answerOptions { margin: 20px 0 4px; padding: 12px 0; border-top: 1px solid var(--ui-line); }
+.setupActions { margin-top: 12px; padding-top: 20px; border-top: 1px solid var(--ui-line); }
+#openBtn { min-height: 48px; padding-inline: 22px; }
+.setupTips { margin-top: 16px; }
+.setupTips p { margin: 4px 0; }
+
+/* A quiet teaching stage, with the teacher's controls below the exercise. */
+#vizCard { background: var(--ui-paper); }
+.vizWrap { margin-top: 0; gap: 18px; height: clamp(520px, calc(100dvh - 100px), 860px); grid-template-rows: auto minmax(180px, 1fr) auto; }
+.vizTop { gap: 12px 20px; }
+.vizHeading { min-width: 0; }
+.vizEyebrow { color: var(--ui-muted); font-size: 12px; letter-spacing: .08em; text-transform: uppercase; margin-bottom: 5px; }
+.vizInfo { font-size: 24px; font-weight: 650; letter-spacing: -.02em; }
+.clockPrompt { display: none; margin: 5px 0 0; color: var(--ui-muted); font-size: 14px; }
+#vizCard:has(#clockToolbar:not(.hidden)) .clockPrompt { display: block; }
+.vizTop > .row { gap: 8px; }
+.vizCanvasWrap { border: 1px solid var(--ui-line); border-radius: 18px; background: white; box-shadow: none; }
+.pill { border: 1px solid var(--ui-line); background: white; color: var(--ui-ink); font-size: 14px; padding: 9px 12px; }
+.vizBottom { justify-content: flex-start; gap: 10px; align-items: center; }
+#actionBtn { order: 3; margin-left: auto; min-height: 48px; padding-inline: 22px; }
+#leftBtn, #rightBtn { order: 2; min-width: 48px; }
+.clockToolbar { flex: 1 1 auto; flex-basis: auto; gap: 8px; }
+.clockToolbar button { min-height: 44px; padding: 10px 12px; }
+.clockToolbar button[aria-pressed="true"] { background: #eaf2fc; color: #184d83; box-shadow: none; border: 1px solid #9fbbda; }
+.clockLegend { margin-left: 0; gap: 6px; }
+#vizCard:has(#clockToolbar.hidden) #clockLegend { display: none; }
+.clockLegend span { font-size: 13px; padding: 7px 10px; }
+#vizCard:fullscreen { padding: 24px; overflow: auto; }
+#vizCard:fullscreen .vizWrap { height: 100%; min-height: 480px; }
+
+/* Carry the same spacing and control treatment into the other tools. */
+.soCard { gap: 16px; }
+.soHeader h1, .tugHeader h1 { letter-spacing: -.025em; }
+.soControls { background: #f8fafd; border-color: var(--ui-line); }
+.soControls summary, .soMapKey summary, .soCurriculum summary { min-height: 44px; display: list-item; align-content: center; padding: 10px 14px; cursor: pointer; }
+.soMapKey, .soCurriculum { border-top: 1px solid var(--ui-line); }
+.soMapKey > :not(summary), .soCurriculum > :not(summary) { margin-left: 14px; margin-right: 14px; }
+.soFooterRow { gap: 12px; }
+.soStatus { line-height: 1.5; }
+.tugSetupBox { border-color: var(--ui-line); }
+.tugSetupBox p, .tugIntro p, .tugHostActions p, .tugShare a { color: var(--ui-muted); }
+.waitToolbar button { min-height: 44px; }
+@media (prefers-reduced-motion: reduce) { .toolChoice { transition: none; } }
+@media (max-width: 900px) {
+  .toolMenu:not(.soToolMenu) { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .vizTop > .row { flex-wrap: wrap; }
+}
+@media (max-width: 600px) {
+  .app { padding: 12px; }
+  .card { padding: 16px; border-radius: 16px; }
+  .toolMenu:not(.soToolMenu), .soToolMenu { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .toolChoice { padding: 12px 10px; min-height: 84px; }
+  #clockOptions { grid-template-columns: 1fr; }
+  .settingsPanel { padding: 16px; }
+  .setupActions { gap: 10px; }
+  #openBtn { width: 100%; }
+  .vizWrap { height: max(640px, calc(100dvh - 58px)); gap: 14px; }
+  .vizTop > .row { width: 100%; }
+  .vizInfo { font-size: 22px; }
+  .clockToolbar { flex-basis: 100%; }
+  #actionBtn { flex-basis: 100%; margin-left: 0; }
+  .clockLegend { flex-basis: 100%; }
+  #vizCard:fullscreen { padding: 12px; }
+  .soHeader .row { gap: 8px; }
+  .soHeader button { min-height: 44px; }
+  .soFooterRow, .soActions { align-items: stretch; }
+  .soMoves button { min-width: 64px; }
+  .tugSetupBox { padding: 18px; }
+}
+
+</style>
 </head>
 <body>
   <div class="app">
     <div class="card" id="setupCard">
+      <p class="setupEyebrow">Förbered lektionen</p>
       <h1>Verktyg för tavlan</h1>
       <p class="setupIntro">Välj ett verktyg, anpassa övningen och öppna den för klassen.</p>
 
@@ -317,7 +437,7 @@
       <div class="spacer"></div>
 
       <div class="row settingsPanel" id="diceOptions">
-        <label>Antal tärningar:</label>
+        <label for="numDice">Antal tärningar:</label>
         <input id="numDice" type="number" min="1" max="24" value="2" />
       </div>
 
@@ -359,9 +479,9 @@
       </div>
 
       <div class="row settingsPanel hidden" id="numberlineOptions">
-        <label>Talrad från:</label>
+        <label for="nlMin">Talrad från:</label>
         <input id="nlMin" type="number" value="0" style="width:90px" />
-        <label>till:</label>
+        <label for="nlMax">till:</label>
         <input id="nlMax" type="number" value="10" style="width:90px" />
         <span class="hint" style="margin:0">Tips: t.ex. -10 till 10</span>
 
@@ -453,33 +573,29 @@
       </div>
       <!-- #endregion -->
       <div class="spacer"></div>
-      <div class="row">
+      <div class="row setupActions">
         <button id="openBtn">Öppna övningen</button>
         <button class="secondary" id="waitScreenBtn" type="button">Visa matteväntskärm</button>
         <button class="secondary" id="tugOpenBtn" type="button">Mattedragkamp</button>
       </div>
 
-      <div class="hint">Tips: På mobilen kan du rotera skärmen. Du kan också använda helskärmsknappen i visualiseringen.</div>
-      <div class="hint">Väntskärmen visar en loopande animation medan klassen gör sig redo. När du börjar lektionen öppnas det verktyg du har valt ovan.</div>
+      <div class="hint setupTips"><p>Tips: På mobilen kan du rotera skärmen. Använd Helskärm för att ge övningen hela tavlan.</p>
+      <p>Matteväntskärmen visar en animation medan klassen gör sig redo. När du börjar lektionen öppnas ditt valda verktyg.</p></div>
     </div>
 
     <div class="card hidden" id="vizCard">
       <div class="vizWrap">
         <div class="vizTop">
-          <div class="vizInfo" id="vizTitle">—</div>
+          <div class="vizHeading"><div class="vizEyebrow">Gemensam övning</div>
+            <div class="vizInfo" id="vizTitle">—</div>
+            <p class="clockPrompt">Vad är klockan?</p></div>
           <div class="row">
             <button class="secondary hidden" id="clockViewBtn" aria-controls="canvas clockTextView">Visa text</button>
             <span class="pill" id="answerPill">Facit: (dolt)</span>
-            <button class="secondary" id="toggleAnswerBtn" aria-pressed="false">Visa facit</button>
             <button class="secondary" id="fullscreenBtn">Helskärm</button>
             <button class="secondary" id="backBtn">Tillbaka</button>
           </div>
-          <div class="clockToolbar hidden" id="clockToolbar">
-            <button class="secondary" id="clockColorsBtn" aria-pressed="true">Färgstöd på</button>
-            <button class="secondary" id="clockMinutesBtn" aria-pressed="false">Minutstöd av</button>
-            <button class="secondary hidden" id="clockQuarterBtn" aria-pressed="false" aria-label="Använd ordet kvart i stället för 15 minuter">Kvart av</button>
             <div class="clockLegend" id="clockLegend"><span class="clockOver">Över</span><span class="clockBefore">I</span><span class="clockHourMarkers">Hel / halv</span></div>
-          </div>
         </div>
 
         <div class="vizCanvasWrap" id="canvasContainer">
@@ -500,6 +616,13 @@
         </div>
 
         <div class="vizBottom">
+        <button class="secondary" id="toggleAnswerBtn" aria-pressed="false">Visa facit</button>
+          <div class="clockToolbar hidden" id="clockToolbar">
+            <button class="secondary" id="clockColorsBtn" aria-pressed="true">Färgstöd på</button>
+            <button class="secondary" id="clockMinutesBtn" aria-pressed="false">Minutstöd av</button>
+            <button class="secondary hidden" id="clockQuarterBtn" aria-pressed="false" aria-label="Använd ordet kvart i stället för 15 minuter">Kvart av</button>
+
+          </div>
         <button id="actionBtn">—</button>
         <button class="secondary" id="leftBtn">←</button>
         <button class="secondary" id="rightBtn">→</button>
